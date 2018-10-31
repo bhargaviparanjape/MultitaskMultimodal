@@ -1,0 +1,10 @@
+Namespace(batch_size=20, bptt=3, debug=False, debug_text='/Users/aditichaudhary/Documents/CMU/text8', dictionary_path=None, dropout=0.2, epochs=20, hidden_dim=15, imageids='/usr2/home/aschaudh/11777/image_ids.txt', label2answer_path='/usr2/home/aschaudh/11777/bottom-up-attention-vqa/data/cache/trainval_label2ans.pkl', lr=0.001, mode='question', model_path='saved_models/default.model', num_layers=2, rnncell='GRU', test_question_path='/usr2/home/aschaudh/11777/bottom-up-attention-vqa/data/v2_OpenEnded_mscoco_test2015_questions.json', train_answer_path='/usr2/home/aschaudh/11777/bottom-up-attention-vqa/data/cache/train_target.pkl', train_expressions='/usr2/home/aschaudh/11777/Google_Refexp_toolbox/google_refexp_dataset_release/google_refexp_train_201511.json', train_question_path='/usr2/home/aschaudh/11777/bottom-up-attention-vqa/data/v2_OpenEnded_mscoco_train2014_questions.json', valid_answer_path='/usr2/home/aschaudh/11777/bottom-up-attention-vqa/data/cache/val_target.pkl', valid_expressions='/usr2/home/aschaudh/11777/Google_Refexp_toolbox/google_refexp_dataset_release/google_refexp_val_201511.json', valid_question_path='/usr2/home/aschaudh/11777/bottom-up-attention-vqa/data/v2_OpenEnded_mscoco_val2014_questions.json', word_dim=50)
+Loading VQA:question
+Processed 100000 points
+Processed 200000 points
+Processed 300000 points
+Processed 400000 points
+VQA :443757
+Loading Googleref expressions
+Ref :44822
+Intersection :24698
