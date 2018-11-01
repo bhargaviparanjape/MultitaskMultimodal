@@ -6,7 +6,7 @@ import numpy as np
 import re
 import cPickle
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from dataset import Dictionary
 import utils
 

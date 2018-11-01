@@ -12,7 +12,7 @@ from __future__ import print_function
 
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import base64
 import csv
@@ -32,6 +32,8 @@ train_indices_file = 'data/train36_imgid2idx.pkl'
 val_indices_file = 'data/val36_imgid2idx.pkl'
 train_ids_file = 'data/train_ids.pkl'
 val_ids_file = 'data/val_ids.pkl'
+train_img_folder = 'data/train2014'
+valid_img_folder = 'data/val2014'
 
 feature_length = 2048
 num_fixed_boxes = 36
@@ -45,8 +47,8 @@ if __name__ == '__main__':
         train_imgids = cPickle.load(open(train_ids_file))
         val_imgids = cPickle.load(open(val_ids_file))
     else:
-        train_imgids = utils.load_imageid('data/train2014')
-        val_imgids = utils.load_imageid('data/val2014')
+        train_imgids = utils.load_imageid(train_img_folder)
+        val_imgids = utils.load_imageid(valid_img_folder)
         cPickle.dump(train_imgids, open(train_ids_file, 'wb'))
         cPickle.dump(val_imgids, open(val_ids_file, 'wb'))
 
