@@ -59,18 +59,6 @@ class Dictionary(object):
     def __len__(self):
         return len(self.idx2word)
 
-'''
-def _create_entry(img, question, answer):
-    answer.pop('image_id')
-    answer.pop('question_id')
-    entry = {
-        'question_id' : question['question_id'],
-        'image_id'    : question['image_id'],
-        'image'       : img,
-        'question'    : question['question'],
-        'answer'      : answer}
-    return entry
-'''
 def _create_entry(img, image_id, refexp, gold_box):
     entry = {
         'refexp_id' : refexp['refexp_id'],
@@ -130,13 +118,13 @@ class RefExpFeatureDataset(Dataset):
 
         self.img_id2idx = cPickle.load(
             #open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
-            open(os.path.join(dataroot, 'val36_imgid2idx_small.pkl')))
+            open(os.path.join(dataroot, 'train36_imgid2idx_small.pkl')))
 
 
         print('loading features from h5 file')
         # Load the feature file provided by Zarana here
         # h5_path = os.path.join(dataroot, '%s36_small.hdf5' % name)
-        h5_path = os.path.join(dataroot, 'val36_small.hdf5')
+        h5_path = os.path.join(dataroot, 'train36_small.hdf5')
         with h5py.File(h5_path, 'r') as hf:
             self.features = np.array(hf.get('image_features'))
             self.spatials = np.array(hf.get('spatial_features'))
@@ -173,7 +161,7 @@ class RefExpFeatureDataset(Dataset):
             refexp = torch.from_numpy(np.array(entry['r_token']))
             entry['r_token'] = refexp
             # Doubt this: does the img_idx dictionary line up with the reference_expressions dictionary??
-            entry['gold_box'] = torch.LongTensor(entry['gold_box'])
+            entry['gold_box'] = torch.LongTensor(1).fill_(entry['gold_box'])
 
     def __getitem__(self, index):
         entry = self.entries[index]

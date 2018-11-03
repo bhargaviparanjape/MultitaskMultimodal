@@ -43,8 +43,9 @@ class NewAttention(nn.Module):
         q: [batch, qdim]
         """
         logits = self.logits(v, q)
-        w = nn.functional.softmax(logits, 1)
-        return w
+        ## Cross Entropy being used later, return raw logits
+        # w = nn.functional.softmax(logits, 1)
+        return logits
 
     def logits(self, v, q):
         batch, k, _ = v.size()

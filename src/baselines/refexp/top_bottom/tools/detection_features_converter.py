@@ -32,16 +32,15 @@ FIELDNAMES = ['image_id', 'image_w', 'image_h', 'num_boxes', 'boxes', 'features'
 data_root = sys.argv[1]
 coco_root = sys.argv[2]
 infile = os.path.join(data_root, 'trainval_subset.tsv')
-train_data_file = os.path.join(data_root, 'train36_small1.hdf5')
-val_data_file = os.path.join(data_root, 'val36_small1.hdf5')
-train_indices_file = os.path.join(data_root, 'val36_imgid2idx_small.pkl')
+train_data_file = os.path.join(data_root, 'train36_small.hdf5')
+val_data_file = os.path.join(data_root, 'val36_small.hdf5')
+train_indices_file = os.path.join(data_root, 'train36_imgid2idx_small.pkl')
 val_indices_file = os.path.join(data_root, 'val36_imgid2idx_small.pkl')
-train_ids_file = os.path.join(data_root, 'val_ids_small.pkl')
+train_ids_file = os.path.join(data_root, 'train_ids_small.pkl')
 val_ids_file = os.path.join(data_root, 'val_ids_small.pkl')
 
 feature_length = 2048
 num_fixed_boxes = 36
-GOLD = 1
 
 
 if __name__ == '__main__':
@@ -52,8 +51,8 @@ if __name__ == '__main__':
         train_imgids = cPickle.load(open(train_ids_file))
         val_imgids = cPickle.load(open(val_ids_file))
     else:
-        train_imgids = utils.load_imageid(os.path.join(coco_root, 'train2014'))
-        val_imgids = utils.load_imageid(os.path.join(coco_root, 'val2014'))
+        train_imgids = utils.load_imageid(os.path.join(data_root, 'google_refexp_train_201511_coco_aligned.json'))
+        val_imgids = utils.load_imageid(os.path.join(data_root, 'google_refexp_val_201511_coco_aligned.json'))
         cPickle.dump(train_imgids, open(train_ids_file, 'wb'))
         cPickle.dump(val_imgids, open(val_ids_file, 'wb'))
 
@@ -67,20 +66,18 @@ if __name__ == '__main__':
     with open(infile, "r+b") as tsv_in_file:
         reader = csv.DictReader(tsv_in_file, delimiter='\t', fieldnames=FIELDNAMES)
         for item in reader:
-            if item['image_id'] in train_imgids:
+            if int(item['image_id']) in train_imgids:
                 images_in_train_tsv_count += 1
-                tsv_train_img_ids.append(item['image_id'])
-            else:
+                tsv_train_img_ids.append(int(item['image_id']))
+            elif int(item['image_id']) in val_imgids:
                 images_in_val_tsv_count += 1
-                tsv_val_img_ids.append(item['image_id'])
+                tsv_val_img_ids.append(int(item['image_id']))
     train_img_features = h_train.create_dataset(
         'image_features', (images_in_train_tsv_count, num_fixed_boxes, feature_length), 'f')
     train_img_bb = h_train.create_dataset(
         'image_bb', (images_in_train_tsv_count, num_fixed_boxes, 4), 'f')
     train_spatial_img_features = h_train.create_dataset(
         'spatial_features', (images_in_train_tsv_count, num_fixed_boxes, 6), 'f')
-    train_gold_id = h_train.create_dataset(
-        'gold_box', (images_in_train_tsv_count, 1), 'i8')
 
     val_img_bb = h_val.create_dataset(
         'image_bb', (images_in_val_tsv_count, num_fixed_boxes, 4), 'f')
@@ -88,8 +85,6 @@ if __name__ == '__main__':
         'image_features', (images_in_val_tsv_count, num_fixed_boxes, feature_length), 'f')
     val_spatial_img_features = h_val.create_dataset(
         'spatial_features', (images_in_val_tsv_count, num_fixed_boxes, 6), 'f')
-    val_gold_id = h_val.create_dataset(
-        'gold_box', (images_in_val_tsv_count, 1), 'i8')
 
     train_counter = 0
     val_counter = 0
@@ -129,30 +124,26 @@ if __name__ == '__main__':
                  scaled_height),
                 axis=1)
 
-            if image_id in train_imgids:
-                continue
-                train_imgids.remove(image_id)
+            if image_id in tsv_train_img_ids:
+                tsv_train_img_ids.remove(image_id)
                 train_indices[image_id] = train_counter
                 train_img_bb[train_counter, :, :] = bboxes
                 train_img_features[train_counter, :, :] = np.frombuffer(
                     base64.decodestring(item['features']),
                     dtype=np.float32).reshape((item['num_boxes'], -1))
                 train_spatial_img_features[train_counter, :, :] = spatial_features
-                ## TODO : Replace with output from tsv file
-                train_gold_id[train_counter, :] = np.random.randint(num_fixed_boxes)
                 train_counter += 1
-            elif image_id in val_imgids:
-                val_imgids.remove(image_id)
+            elif image_id in tsv_val_img_ids:
+                tsv_val_img_ids.remove(image_id)
                 val_indices[image_id] = val_counter
                 val_img_bb[val_counter, :, :] = bboxes
                 val_img_features[val_counter, :, :] = np.frombuffer(
                     base64.decodestring(item['features']),
                     dtype=np.float32).reshape((item['num_boxes'], -1))
                 val_spatial_img_features[val_counter, :, :] = spatial_features
-                val_gold_id[val_counter, :] = np.random.randint(num_fixed_boxes)
                 val_counter += 1
             else:
-                assert False, 'Unknown image id: %d' % image_id
+                print('Unknown image id: %d' % image_id)
 
     if len(train_imgids) != 0:
         print('Warning: train_image_ids is not empty')

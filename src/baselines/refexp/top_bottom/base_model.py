@@ -27,39 +27,7 @@ class BaseRefexModel(nn.Module):
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
         logits = self.v_att(v, q_emb)
-        pdb.set_trace()
-        
-        '''
-        v_emb = (att * v).sum(1) # [batch, v_dim]
-
-        q_repr = self.q_net(q_emb)
-        v_repr = self.v_net(v_emb)
-        joint_repr = q_repr * v_repr
-        logits = self.classifier(joint_repr)
-        '''
         return logits
-
-
-def build_baseline0(dataset, num_hid):
-    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
-    q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    v_att = Attention(dataset.v_dim, q_emb.num_hid, num_hid)
-    q_net = FCNet([num_hid, num_hid])
-    v_net = FCNet([dataset.v_dim, num_hid])
-    classifier = SimpleClassifier(
-        num_hid, 2 * num_hid, dataset.num_ans_candidates, 0.5)
-    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier)
-
-
-def build_baseline0_newatt(dataset, num_hid):
-    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
-    q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    v_att = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid)
-    q_net = FCNet([q_emb.num_hid, num_hid])
-    v_net = FCNet([dataset.v_dim, num_hid])
-    classifier = SimpleClassifier(
-        num_hid, num_hid * 2, dataset.num_ans_candidates, 0.5)
-    return BaseModel(w_emb, q_emb, v_att, q_net, v_net, classifier)
 
 def build_refex_baseline(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)

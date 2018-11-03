@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 import torch
 import torch.nn as nn
+import json
 
 
 EPS = 1e-7
@@ -28,12 +29,13 @@ def load_folder(folder, suffix):
     return imgs
 
 
-def load_imageid(folder):
-    images = load_folder(folder, 'jpg')
+def load_imageid(data_path):
     img_ids = set()
-    for img in images:
-        img_id = int(img.split('/')[-1].split('.')[0].split('_')[-1])
-        img_ids.add(img_id)
+    refex_path = os.path.join(data_path)
+    data = json.load(open(refex_path))
+    images = data['images']
+    for image_id in images:
+        img_ids.add(int(image_id))
     return img_ids
 
 

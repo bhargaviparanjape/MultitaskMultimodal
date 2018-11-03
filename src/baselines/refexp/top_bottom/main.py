@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument('--num_hid', type=int, default=1024)
     parser.add_argument('--model', type=str, default='refex_baseline')
     parser.add_argument('--output', type=str, default='saved_models/exp0')
-    parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--batch_size', type=int, default=3)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     args = parser.parse_args()
     return args
@@ -47,5 +47,4 @@ if __name__ == '__main__':
 
     train_loader = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
     eval_loader =  DataLoader(eval_dset, batch_size, shuffle=True, num_workers=1)
-    pdb.set_trace()
     train(model, train_loader, eval_loader, args.epochs, args.output)
