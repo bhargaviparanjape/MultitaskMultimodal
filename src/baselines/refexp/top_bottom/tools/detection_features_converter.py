@@ -31,11 +31,11 @@ FIELDNAMES = ['image_id', 'image_w', 'image_h', 'num_boxes', 'boxes', 'features'
 data_root = sys.argv[1]
 coco_root = sys.argv[2]
 infile = os.path.join(data_root, 'trainval_subset.tsv')
-train_data_file = os.path.join(data_root, 'train36_small.hdf5')
-val_data_file = os.path.join(data_root, 'val36_small.hdf5')
-train_indices_file = os.path.join(data_root, 'train36_imgid2idx_small.pkl')
+train_data_file = os.path.join(data_root, 'train36_small1.hdf5')
+val_data_file = os.path.join(data_root, 'val36_small1.hdf5')
+train_indices_file = os.path.join(data_root, 'val36_imgid2idx_small.pkl')
 val_indices_file = os.path.join(data_root, 'val36_imgid2idx_small.pkl')
-train_ids_file = os.path.join(data_root, 'train_ids_small.pkl')
+train_ids_file = os.path.join(data_root, 'val_ids_small.pkl')
 val_ids_file = os.path.join(data_root, 'val_ids_small.pkl')
 
 feature_length = 2048
