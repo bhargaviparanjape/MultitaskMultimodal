@@ -22,6 +22,7 @@ import numpy as np
 import utils
 import sys
 import os
+import pdb
 
 
 csv.field_size_limit(sys.maxsize)
@@ -58,24 +59,37 @@ if __name__ == '__main__':
 
     train_indices = {}
     val_indices = {}
-
+    
+    images_in_train_tsv_count = 0
+    images_in_val_tsv_count = 0
+    tsv_train_img_ids = []
+    tsv_val_img_ids = []
+    with open(infile, "r+b") as tsv_in_file:
+        reader = csv.DictReader(tsv_in_file, delimiter='\t', fieldnames=FIELDNAMES)
+        for item in reader:
+            if item['image_id'] in train_imgids:
+                images_in_train_tsv_count += 1
+                tsv_train_img_ids.append(item['image_id'])
+            else:
+                images_in_val_tsv_count += 1
+                tsv_val_img_ids.append(item['image_id'])
     train_img_features = h_train.create_dataset(
-        'image_features', (len(train_imgids), num_fixed_boxes, feature_length), 'f')
+        'image_features', (images_in_train_tsv_count, num_fixed_boxes, feature_length), 'f')
     train_img_bb = h_train.create_dataset(
-        'image_bb', (len(train_imgids), num_fixed_boxes, 4), 'f')
+        'image_bb', (images_in_train_tsv_count, num_fixed_boxes, 4), 'f')
     train_spatial_img_features = h_train.create_dataset(
-        'spatial_features', (len(train_imgids), num_fixed_boxes, 6), 'f')
+        'spatial_features', (images_in_train_tsv_count, num_fixed_boxes, 6), 'f')
     train_gold_id = h_train.create_dataset(
-        'gold_box', (len(train_imgids), 1), 'i8')
+        'gold_box', (images_in_train_tsv_count, 1), 'i8')
 
     val_img_bb = h_val.create_dataset(
-        'image_bb', (len(val_imgids), num_fixed_boxes, 4), 'f')
+        'image_bb', (images_in_val_tsv_count, num_fixed_boxes, 4), 'f')
     val_img_features = h_val.create_dataset(
-        'image_features', (len(val_imgids), num_fixed_boxes, feature_length), 'f')
+        'image_features', (images_in_val_tsv_count, num_fixed_boxes, feature_length), 'f')
     val_spatial_img_features = h_val.create_dataset(
-        'spatial_features', (len(val_imgids), num_fixed_boxes, 6), 'f')
+        'spatial_features', (images_in_val_tsv_count, num_fixed_boxes, 6), 'f')
     val_gold_id = h_val.create_dataset(
-        'gold_box', (len(val_imgids), 1), 'i8')
+        'gold_box', (images_in_val_tsv_count, 1), 'i8')
 
     train_counter = 0
     val_counter = 0
@@ -116,6 +130,7 @@ if __name__ == '__main__':
                 axis=1)
 
             if image_id in train_imgids:
+                continue
                 train_imgids.remove(image_id)
                 train_indices[image_id] = train_counter
                 train_img_bb[train_counter, :, :] = bboxes
