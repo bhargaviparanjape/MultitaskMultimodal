@@ -130,13 +130,13 @@ class RefExpFeatureDataset(Dataset):
 
         self.img_id2idx = cPickle.load(
             #open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
-            open(os.path.join(dataroot, 'train36_imgid2idx_small.pkl')))
+            open(os.path.join(dataroot, 'val36_imgid2idx_small.pkl')))
 
 
         print('loading features from h5 file')
         # Load the feature file provided by Zarana here
         # h5_path = os.path.join(dataroot, '%s36_small.hdf5' % name)
-        h5_path = os.path.join(dataroot, 'train36_small.hdf5')
+        h5_path = os.path.join(dataroot, 'val36_small.hdf5')
         with h5py.File(h5_path, 'r') as hf:
             self.features = np.array(hf.get('image_features'))
             self.spatials = np.array(hf.get('spatial_features'))
