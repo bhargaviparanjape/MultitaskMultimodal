@@ -13,6 +13,10 @@ def instance_bce_with_logits(logits, labels):
     loss *= labels.size(1)
     return loss
 
+def cross_entropy(logits, labels):
+    loss = nn.functional.cross_entropy(logits, labels)
+    return loss
+
 
 def compute_score_with_logits(logits, labels):
     logits = torch.max(logits, 1)[1].data # argmax
@@ -40,7 +44,8 @@ def train(model, train_loader, eval_loader, num_epochs, output):
             a = Variable(a).cuda()
 
             pred = model(v, b, q, a)
-            loss = instance_bce_with_logits(pred, a)
+            ## Cross Entropy Loss
+            loss = cross_entropy(pred, a)
             loss.backward()
             nn.utils.clip_grad_norm(model.parameters(), 0.25)
             optim.step()

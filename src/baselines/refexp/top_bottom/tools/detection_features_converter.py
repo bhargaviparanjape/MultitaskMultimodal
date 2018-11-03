@@ -12,7 +12,7 @@ from __future__ import print_function
 
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import base64
 import csv
@@ -20,21 +20,27 @@ import h5py
 import cPickle
 import numpy as np
 import utils
+import sys
+import os
 
 
 csv.field_size_limit(sys.maxsize)
 
+## TODO : Additional field 'gold_box'
 FIELDNAMES = ['image_id', 'image_w', 'image_h', 'num_boxes', 'boxes', 'features']
-infile = 'data/trainval_36/trainval_resnet101_faster_rcnn_genome_36.tsv'
-train_data_file = 'data/train36.hdf5'
-val_data_file = 'data/val36.hdf5'
-train_indices_file = 'data/train36_imgid2idx.pkl'
-val_indices_file = 'data/val36_imgid2idx.pkl'
-train_ids_file = 'data/train_ids.pkl'
-val_ids_file = 'data/val_ids.pkl'
+data_root = sys.argv[1]
+coco_root = sys.argv[2]
+infile = os.path.join(data_root, 'trainval_subset.tsv')
+train_data_file = os.path.join(data_root, 'train36_small.hdf5')
+val_data_file = os.path.join(data_root, 'val36_small.hdf5')
+train_indices_file = os.path.join(data_root, 'train36_imgid2idx_small.pkl')
+val_indices_file = os.path.join(data_root, 'val36_imgid2idx_small.pkl')
+train_ids_file = os.path.join(data_root, 'train_ids_small.pkl')
+val_ids_file = os.path.join(data_root, 'val_ids_small.pkl')
 
 feature_length = 2048
 num_fixed_boxes = 36
+GOLD = 1
 
 
 if __name__ == '__main__':
@@ -45,8 +51,8 @@ if __name__ == '__main__':
         train_imgids = cPickle.load(open(train_ids_file))
         val_imgids = cPickle.load(open(val_ids_file))
     else:
-        train_imgids = utils.load_imageid('data/train2014')
-        val_imgids = utils.load_imageid('data/val2014')
+        train_imgids = utils.load_imageid(os.path.join(coco_root, 'train2014'))
+        val_imgids = utils.load_imageid(os.path.join(coco_root, 'val2014'))
         cPickle.dump(train_imgids, open(train_ids_file, 'wb'))
         cPickle.dump(val_imgids, open(val_ids_file, 'wb'))
 
@@ -59,6 +65,8 @@ if __name__ == '__main__':
         'image_bb', (len(train_imgids), num_fixed_boxes, 4), 'f')
     train_spatial_img_features = h_train.create_dataset(
         'spatial_features', (len(train_imgids), num_fixed_boxes, 6), 'f')
+    train_gold_id = h_train.create_dataset(
+        'gold_box', (len(train_imgids), 1), 'i8')
 
     val_img_bb = h_val.create_dataset(
         'image_bb', (len(val_imgids), num_fixed_boxes, 4), 'f')
@@ -66,6 +74,8 @@ if __name__ == '__main__':
         'image_features', (len(val_imgids), num_fixed_boxes, feature_length), 'f')
     val_spatial_img_features = h_val.create_dataset(
         'spatial_features', (len(val_imgids), num_fixed_boxes, 6), 'f')
+    val_gold_id = h_val.create_dataset(
+        'gold_box', (len(val_imgids), 1), 'i8')
 
     train_counter = 0
     val_counter = 0
@@ -113,6 +123,8 @@ if __name__ == '__main__':
                     base64.decodestring(item['features']),
                     dtype=np.float32).reshape((item['num_boxes'], -1))
                 train_spatial_img_features[train_counter, :, :] = spatial_features
+                ## TODO : Replace with output from tsv file
+                train_gold_id[train_counter, :] = np.random.randint(num_fixed_boxes)
                 train_counter += 1
             elif image_id in val_imgids:
                 val_imgids.remove(image_id)
@@ -122,6 +134,7 @@ if __name__ == '__main__':
                     base64.decodestring(item['features']),
                     dtype=np.float32).reshape((item['num_boxes'], -1))
                 val_spatial_img_features[val_counter, :, :] = spatial_features
+                val_gold_id[val_counter, :] = np.random.randint(num_fixed_boxes)
                 val_counter += 1
             else:
                 assert False, 'Unknown image id: %d' % image_id
