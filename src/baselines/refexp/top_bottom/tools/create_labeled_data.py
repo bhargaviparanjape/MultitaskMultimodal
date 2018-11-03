@@ -82,6 +82,12 @@ def get_labeled_data(input_filename, boxes):
             labeled_data['annotations'][annotation_id] = new_annotation
             del new_annotation['segmentation']
 
+    print('Number of images in boxes_dataset = %d' % len(boxes))
+    print('Number of images in input_dataset = %d' % len([int(i['image_id']) for i in data_aligned['annotations'].values()]))
+    print('Number of input annotations = %d' % len(data_aligned['annotations']))
+    print('Number of images labeled = %d' % len([int(i['image_id']) for i in labeled_data['annotations'].values()]))
+    print('Number of annotations labeled = %d' % len(labeled_data['annotations']))
+
     return labeled_data
 
 if __name__ == '__main__':
