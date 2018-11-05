@@ -63,7 +63,45 @@ def max_vec(scores):
     labels[scores.index(max(scores))] = 1
     return labels
 
-def get_labeled_data(input_filename, boxes):
+def get_annotations(data_aligned):
+    annotations = {}
+    for ann_id, annotation in data_aligned['annotations'].items():
+        annotation['annotation_id'] = ann_id
+        img_id = int(annotation['image_id'])
+        if img_id not in annotations:
+            annotations[img_id] = []
+        annotations[img_id].append(annotation)
+    return annotations
+
+def decoded_boxes(boxes, num_boxes):
+    b = np.array(np.frombuffer(base64.b64decode(boxes), dtype=np.float32).reshape((num_boxes,-1)))
+    b[:, 2] -= b[:, 0]
+    b[:, 3] -= b[:, 1]
+    return b
+
+def get_labeled_annotations(boxes_filename, annotations):
+    labeled_annotations = {}
+
+    csv.field_size_limit(sys.maxsize)
+    with open(boxes_filename, "r") as tsv_in_file:
+        for line in tsv_in_file:
+            image_id, image_w, image_h, num_boxes, boxes, _ = line.strip().split('\t')
+            image_id, image_w, image_h, num_boxes = list(map(int, [image_id, image_w, image_h, num_boxes]))
+            if image_id in annotations:
+                for annotation in annotations[image_id]:
+                    new_annotation = dict(annotation)
+                    boxes = decoded_boxes(boxes, num_boxes)
+                    scores = [iou_bboxes(b, annotation['bbox']) for b in boxes]
+                    labels = max_vec(scores)
+
+                    new_annotation['boxes'] = [list(map(float, b)) for b in boxes]
+                    new_annotation['iou_scores'] = scores
+                    new_annotation['labels'] = list(labels)
+                    labeled_annotations[annotation['annotation_id']] = new_annotation
+
+    return labeled_annotations
+
+def get_labeled_data(input_filename):
 
     with open(input_filename, 'r') as fp:
         data_aligned = json.load(fp)
@@ -71,21 +109,9 @@ def get_labeled_data(input_filename, boxes):
     labeled_data = {}
     labeled_data['images'] = data_aligned['images']
     labeled_data['refexps'] = data_aligned['refexps']
-    labeled_data['annotations'] = {}
+    labeled_data['annotations'] = get_labeled_annotations(boxes_filename, get_annotations(data_aligned))
 
-    for annotation_id, annotation in data_aligned['annotations'].items():
-        img_id = annotation['image_id']
-        if int(img_id) in boxes:
-            new_annotation = dict(annotation)
-            scores = [iou_bboxes(b, annotation['bbox']) for b in boxes[int(img_id)]['boxes']]
-            labels = max_vec(scores)
-            new_annotation['boxes'] = [list(map(float, b)) for b in boxes[int(img_id)]['boxes']]
-            new_annotation['iou_scores'] = scores
-            new_annotation['labels'] = list(labels)
-            labeled_data['annotations'][annotation_id] = new_annotation
-            del new_annotation['segmentation']
-
-    print('Number of images in boxes_dataset = %d' % len(boxes))
+    # print('Number of images in boxes_dataset = %d' % len(boxes))
     print('Number of images in input_dataset = %d' % len([int(i['image_id']) for i in data_aligned['annotations'].values()]))
     print('Number of input annotations = %d' % len(data_aligned['annotations']))
     print('Number of images labeled = %d' % len([int(i['image_id']) for i in labeled_data['annotations'].values()]))
@@ -102,8 +128,7 @@ if __name__ == '__main__':
     if not output_filename:
         output_filename = input_filename.replace('.json', '_and_labeled.json')
     
-    boxes = load_boxes(boxes_filename)
-    labeled_data = get_labeled_data(input_filename, boxes)
+    labeled_data = get_labeled_data(input_filename)
 
     # Save labeled data
     with open(output_filename, 'w') as fp:
