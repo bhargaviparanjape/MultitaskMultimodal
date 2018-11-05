@@ -50,9 +50,11 @@ def load_boxes(boxes_filename):
             item['image_h'] = int(item['image_h'])
             item['image_w'] = int(item['image_w'])   
             item['num_boxes'] = int(item['num_boxes'])
-            for field in ['boxes']:
-                item[field] = np.frombuffer(base64.b64decode(item[field]), 
-                    dtype=np.float32).reshape((item['num_boxes'],-1))
+            b = np.frombuffer(base64.b64decode(item['boxes']), dtype=np.float32).reshape((item['num_boxes'],-1))
+            b = np.array(b)
+            b[:, 2] -= b[:, 0]
+            b[:, 3] -= b[:, 1]
+            item['boxes'] = b
             in_data[item['image_id']] = item
     return in_data
 
@@ -77,6 +79,7 @@ def get_labeled_data(input_filename, boxes):
             new_annotation = dict(annotation)
             scores = [iou_bboxes(b, annotation['bbox']) for b in boxes[int(img_id)]['boxes']]
             labels = max_vec(scores)
+            new_annotation['boxes'] = [list(map(float, b)) for b in boxes[int(img_id)]['boxes']]
             new_annotation['iou_scores'] = scores
             new_annotation['labels'] = list(labels)
             labeled_data['annotations'][annotation_id] = new_annotation
