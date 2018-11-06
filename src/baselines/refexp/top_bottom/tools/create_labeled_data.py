@@ -93,14 +93,14 @@ def get_labeled_annotations(boxes_filename, annotations):
                 for annotation in annotations[image_id]:
                     new_annotation = dict(annotation)
                     try:
-                        boxes = decoded_boxes(boxes, num_boxes)
+                        new_boxes = decoded_boxes(boxes, num_boxes)
                     except:
                         print('Failed decoding at line: %d' % line_count)
                         exit()
-                    scores = [iou_bboxes(b, annotation['bbox']) for b in boxes]
+                    scores = [iou_bboxes(b, annotation['bbox']) for b in new_boxes]
                     labels = max_vec(scores)
 
-                    new_annotation['boxes'] = [list(map(float, b)) for b in boxes]
+                    new_annotation['boxes'] = [list(map(float, b)) for b in new_boxes]
                     new_annotation['iou_scores'] = scores
                     new_annotation['labels'] = list(labels)
                     labeled_annotations[annotation['annotation_id']] = new_annotation
