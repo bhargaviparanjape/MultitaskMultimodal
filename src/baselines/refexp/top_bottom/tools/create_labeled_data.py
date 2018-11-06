@@ -83,14 +83,20 @@ def get_labeled_annotations(boxes_filename, annotations):
     labeled_annotations = {}
 
     csv.field_size_limit(sys.maxsize)
+    line_count = 0
     with open(boxes_filename, "r") as tsv_in_file:
         for line in tsv_in_file:
+            line_count += 1
             image_id, image_w, image_h, num_boxes, boxes, _ = line.strip().split('\t')
             image_id, image_w, image_h, num_boxes = list(map(int, [image_id, image_w, image_h, num_boxes]))
             if image_id in annotations:
                 for annotation in annotations[image_id]:
                     new_annotation = dict(annotation)
-                    boxes = decoded_boxes(boxes, num_boxes)
+                    try:
+                        boxes = decoded_boxes(boxes, num_boxes)
+                    except:
+                        print('Failed decoding at line: %d' % line_count)
+                        exit()
                     scores = [iou_bboxes(b, annotation['bbox']) for b in boxes]
                     labels = max_vec(scores)
 
@@ -98,6 +104,8 @@ def get_labeled_annotations(boxes_filename, annotations):
                     new_annotation['iou_scores'] = scores
                     new_annotation['labels'] = list(labels)
                     labeled_annotations[annotation['annotation_id']] = new_annotation
+            if (line_count % 1000 == 0):
+                print('Processed %d lines' % line_count)
 
     return labeled_annotations
 
