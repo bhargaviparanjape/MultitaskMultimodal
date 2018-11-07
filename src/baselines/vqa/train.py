@@ -19,7 +19,7 @@ def compute_score_with_logits(logits, labels):
     one_hots = torch.zeros(*labels.size()).cuda()
     one_hots.scatter_(1, logits.view(-1, 1), 1)
     scores = (one_hots * labels)
-    return scores
+    return scores, logits
 
 
 def train(model, train_loader, eval_loader, num_epochs, output):
@@ -33,7 +33,7 @@ def train(model, train_loader, eval_loader, num_epochs, output):
         train_score = 0
         t = time.time()
 
-        for i, (v, b, q, a) in enumerate(train_loader):
+        for i, (v, b, q, a,image_id, question_id) in enumerate(train_loader):
             v = Variable(v).cuda()
             b = Variable(b).cuda()
             q = Variable(q).cuda()
@@ -53,7 +53,7 @@ def train(model, train_loader, eval_loader, num_epochs, output):
         total_loss /= len(train_loader.dataset)
         train_score = 100 * train_score / len(train_loader.dataset)
         model.train(False)
-        eval_score, bound = evaluate(model, eval_loader)
+        eval_score, bound = eval(model, eval_loader)
         model.train(True)
 
         logger.write('epoch %d, time: %.2f' % (epoch, time.time()-t))
@@ -66,16 +66,16 @@ def train(model, train_loader, eval_loader, num_epochs, output):
             best_eval_score = eval_score
 
 
-def evaluate(model, dataloader):
+def eval(model, dataloader):
     score = 0
     upper_bound = 0
     num_data = 0
-    for v, b, q, a in iter(dataloader):
+    for v, b, q, a, image_id, question_id in iter(dataloader):
         v = Variable(v, volatile=True).cuda()
         b = Variable(b, volatile=True).cuda()
         q = Variable(q, volatile=True).cuda()
         pred = model(v, b, q, None)
-        batch_score = compute_score_with_logits(pred, a.cuda()).sum()
+        batch_score, logits = compute_score_with_logits(pred, a.cuda()).sum()
         score += batch_score
         upper_bound += (a.max(1)[0]).sum()
         num_data += pred.size(0)
@@ -83,3 +83,28 @@ def evaluate(model, dataloader):
     score = score / len(dataloader.dataset)
     upper_bound = upper_bound / len(dataloader.dataset)
     return score, upper_bound
+
+
+def evaluate(model, dataloader):
+    score = 0
+    upper_bound = 0
+    num_data = 0
+    result_log = []
+    for v, b, q, a, image_id, question_id in iter(dataloader):
+        v = Variable(v, volatile=True).cuda()
+        b = Variable(b, volatile=True).cuda()
+        q = Variable(q, volatile=True).cuda()
+        pred = model(v, b, q, None)
+        batch_score, predicted_logits = compute_score_with_logits(pred, a.cuda()).sum()
+        score += batch_score
+        upper_bound += (a.max(1)[0]).sum()
+        num_data += pred.size(0)
+
+        # iterate over batch and populate result_log
+        for i in range(v.size(0)):
+            result_log.append(
+                [image_id[i], question_id[i], predicted_logits[i]])
+
+    score = score / len(dataloader.dataset)
+    upper_bound = upper_bound / len(dataloader.dataset)
+    return score, upper_bound, result_log

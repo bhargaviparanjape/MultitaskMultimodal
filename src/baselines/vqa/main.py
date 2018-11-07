@@ -6,7 +6,8 @@ import numpy as np
 
 from dataset import Dictionary, VQAFeatureDataset
 import base_model
-from train import train
+from train import train, evaluate
+import json
 import utils
 
 
@@ -16,6 +17,8 @@ def parse_args():
     parser.add_argument('--num_hid', type=int, default=1024)
     parser.add_argument('--model', type=str, default='baseline0_newatt')
     parser.add_argument('--output', type=str, default='saved_models/exp0')
+    parser.add_argument('--mode', type=str, default="train")
+    parser.add_argument('--analysis_file', type=str, default="saved_models/analysis.json")
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     args = parser.parse_args()
@@ -43,3 +46,20 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
     eval_loader =  DataLoader(eval_dset, batch_size, shuffle=True, num_workers=1)
     train(model, train_loader, eval_loader, args.epochs, args.output)
+    if args.mode == "train":
+        train(model, train_loader, eval_loader, args.epochs, args.output)
+    else:
+        checkpoint = torch.load(args.model_file)
+        model.load_state_dict(checkpoint)
+        score, analysis_log = evaluate(model, eval_loader)
+
+        # obtain answers dictionary
+        with open(args.analysis_file, "w+") as fout:
+            for item in analysis_log:
+                answer = item[-1]
+                # q_tokens = [dictionary.idx2word[id] for id in item[-2]]
+                dict_ = {
+                    "question_id" : item[0],
+                    "answer_id" : answer
+                }
+                fout.write(json.dumps(dict_) + "\n")
