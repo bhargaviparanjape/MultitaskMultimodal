@@ -77,8 +77,8 @@ def _load_dataset(dataroot, name, img_id2val):
     name: 'train', 'val'
     """
     refex_path = os.path.join(
-         #dataroot, 'google_refexp_%s_201511_coco_aligned.json' % name)
-         dataroot, 'google_refexp_val_201511_coco_aligned_and_labeled.json')
+         dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled.json' % name)
+         # dataroot, 'google_refexp_val_201511_coco_aligned_and_labeled.json')
     data = json.load(open(refex_path))
     refexps = data['refexps']
     images = data['images']
@@ -117,14 +117,14 @@ class RefExpFeatureDataset(Dataset):
         self.dictionary = dictionary
 
         self.img_id2idx = cPickle.load(
-            #open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
-            open(os.path.join(dataroot, 'train36_imgid2idx_small.pkl')))
+            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
+            #open(os.path.join(dataroot, 'train36_imgid2idx_small.pkl')))
 
 
         print('loading features from h5 file')
         # Load the feature file provided by Zarana here
-        # h5_path = os.path.join(dataroot, '%s36_small.hdf5' % name)
-        h5_path = os.path.join(dataroot, 'train36_small.hdf5')
+        h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
+        # h5_path = os.path.join(dataroot, 'train36_small.hdf5')
         with h5py.File(h5_path, 'r') as hf:
             self.features = np.array(hf.get('image_features'))
             self.spatials = np.array(hf.get('spatial_features'))
