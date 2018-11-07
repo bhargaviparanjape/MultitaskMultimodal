@@ -6,10 +6,11 @@ import numpy as np
 
 from dataset import Dictionary,RefExpFeatureDataset
 import base_model
-from train import train
+from train import train, evaluate
 import utils
 import pdb
 import sys,os
+import json
 
 
 def parse_args():
@@ -20,6 +21,9 @@ def parse_args():
     parser.add_argument('--model', type=str, default='refex_baseline')
     parser.add_argument('--output', type=str, default='saved_models/exp0')
     parser.add_argument('--batch_size', type=int, default=3)
+    parser.add_argument('--mode', type=str, default="train")
+    parser.add_argument('--analysis_file', type=str, default="saved_models/analysis.json")
+    parser.add_argument('--model_file', type=str, default="saved_models/exp0/model.pth")
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     args = parser.parse_args()
     return args
@@ -46,5 +50,22 @@ if __name__ == '__main__':
     #model = nn.DataParallel(model).cuda()
 
     train_loader = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
-    eval_loader =  DataLoader(eval_dset, batch_size, shuffle=True, num_workers=1)
-    train(model, train_loader, eval_loader, args.epochs, args.output)
+    eval_loader =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=1)
+    if args.mode == "train":
+        train(model, train_loader, eval_loader, args.epochs, args.output)
+    else:
+        checkpoint = torch.load(args.model_file)
+        model.load_state_dict(checkpoint)
+        score, analysis_log = evaluate(model, eval_loader)
+        with open(args.analysis_file, "w+") as fout:
+            for item in analysis_log:
+                gold_box = item[-1]
+                # q_tokens = [dictionary.idx2word[id] for id in item[-2]]
+                dict_ = {
+                    "image_id" : item[0],
+                    "annotation_id" : item[1],
+                    "refexp_id" : item[2],
+                    "predicted_id" : gold_box
+                }
+                fout.write(json.dumps(dict_) + "\n")
+

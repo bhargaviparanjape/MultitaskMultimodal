@@ -59,8 +59,9 @@ class Dictionary(object):
     def __len__(self):
         return len(self.idx2word)
 
-def _create_entry(img, image_id, refexp, gold_box):
+def _create_entry(img, image_id, annotation_id, refexp, gold_box):
     entry = {
+        'annotation_id' : annotation_id,
         'refexp_id' : refexp['refexp_id'],
         'image_id' : image_id,
         'image' : img,
@@ -89,6 +90,7 @@ def _load_dataset(dataroot, name, img_id2val):
     entries = []
     for annotation_id in annotations:
         image_id = annotations[annotation_id]['image_id']
+        annotation_id_ = int(annotation_id)
         gold_box = annotations[annotation_id]['labels'].index(1)
         #gold_box = np.random.randint(36)
         if image_id not in img_id2val:
@@ -97,7 +99,7 @@ def _load_dataset(dataroot, name, img_id2val):
         refexp_ids = annotations[annotation_id]['refexp_ids']
         for id_ in refexp_ids:
             refexp = refexps[str(id_)]
-            entries.append(_create_entry(img, image_id, refexp, gold_box))
+            entries.append(_create_entry(img, image_id, annotation_id_, refexp, gold_box))
             
 
     return entries
@@ -171,7 +173,11 @@ class RefExpFeatureDataset(Dataset):
         refexp = entry['r_token']
         gold_box = entry['gold_box']
 
-        return features, spatials, refexp, gold_box
+        refexp_id = entry['refexp_id']
+        image_id = entry['image_id']
+        annotation_id = entry['annotation_id']
+
+        return features, spatials, refexp, gold_box, image_id, annotation_id, refexp_id
 
     def __len__(self):
         return len(self.entries)

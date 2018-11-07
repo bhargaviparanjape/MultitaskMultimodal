@@ -20,7 +20,7 @@ def cross_entropy(logits, labels):
 
 def compute_score_with_logits(logits, labels):
     logits = torch.max(logits, 1)[1].data #argmax
-    return (logits == labels).sum()
+    return (logits == labels).sum(), logits
 
 
 def train(model, train_loader, eval_loader, num_epochs, output):
@@ -34,7 +34,7 @@ def train(model, train_loader, eval_loader, num_epochs, output):
         train_score = 0
         t = time.time()
 
-        for i, (v, b, q, a) in enumerate(train_loader):
+        for i, (v, b, q, a, image_id, annotation_id, refexp_id) in enumerate(train_loader):
             if torch.cuda.is_available():
                 v = Variable(v).cuda()
                 b = Variable(b).cuda()
@@ -58,14 +58,14 @@ def train(model, train_loader, eval_loader, num_epochs, output):
             optim.step()
             optim.zero_grad()
 
-            batch_score = compute_score_with_logits(pred, a.data)
+            batch_score, predicted_labels = compute_score_with_logits(pred, a.data)
             total_loss += loss.data[0] * v.size(0)
             train_score += batch_score
 
         total_loss /= len(train_loader.dataset)
         train_score = 100 * train_score / len(train_loader.dataset)
         model.train(False)
-        eval_score = evaluate(model, eval_loader)
+        eval_score = eval(model, eval_loader)
         model.train(True)
 
         logger.write('epoch %d, time: %.2f' % (epoch, time.time()-t))
@@ -78,11 +78,10 @@ def train(model, train_loader, eval_loader, num_epochs, output):
             best_eval_score = eval_score
 
 
-def evaluate(model, dataloader):
+def eval(model, dataloader):
     score = 0
-    upper_bound = 0
     num_data = 0
-    for v, b, q, a in iter(dataloader):
+    for v, b, q, a, image_id, annotation_id, refexp_id in iter(dataloader):
         if torch.cuda.is_available():
             v = Variable(v, volatile=True).cuda()
             b = Variable(b, volatile=True).cuda()
@@ -97,10 +96,42 @@ def evaluate(model, dataloader):
         pred = pred.squeeze(-1)
         a = a.squeeze(-1)
 
-        batch_score = compute_score_with_logits(pred, a)
+        batch_score, predicted_labels = compute_score_with_logits(pred, a)
         score += batch_score
         num_data += pred.size(0)
 
     score = 100 * score / len(dataloader.dataset)
-    # upper_bound = upper_bound / len(dataloader.dataset)
     return score
+
+
+def evaluate(model, dataloader):
+    score = 0
+    upper_bound = 0
+    num_data = 0
+    result_log = []
+    for v, b, q, a, image_id, annotation_id, refexp_id in iter(dataloader):
+        q_vector = q
+        if torch.cuda.is_available():
+            v = Variable(v, volatile=True).cuda()
+            b = Variable(b, volatile=True).cuda()
+            q = Variable(q, volatile=True).cuda()
+            a = a.cuda()
+        else:
+            v = Variable(v, volatile=True)
+            b = Variable(b, volatile=True)
+            q = Variable(q, volatile=True)
+        pred = model(v, b, q, None)
+
+        pred = pred.squeeze(-1)
+        a = a.squeeze(-1)
+
+        batch_score, predicted_labels = compute_score_with_logits(pred, a)
+        score += batch_score
+        num_data += pred.size(0)
+
+        # iterate over batch and populate result_log
+        for i in range(v.size(0)):
+            result_log.append([image_id[i], annotation_id[i], refexp_id[i], predicted_labels[i], q_vector[i].numpy(), a[i]])
+
+    score = 100 * score / len(dataloader.dataset)
+    return score, result_log
