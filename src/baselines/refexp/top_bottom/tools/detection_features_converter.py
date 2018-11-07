@@ -30,14 +30,13 @@ csv.field_size_limit(sys.maxsize)
 ## TODO : Additional field 'gold_box'
 FIELDNAMES = ['image_id', 'image_w', 'image_h', 'num_boxes', 'boxes', 'features']
 data_root = sys.argv[1]
-coco_root = sys.argv[2]
-infile = os.path.join(data_root, 'trainval_subset.tsv')
-train_data_file = os.path.join(data_root, 'train36_small.hdf5')
-val_data_file = os.path.join(data_root, 'val36_small.hdf5')
-train_indices_file = os.path.join(data_root, 'train36_imgid2idx_small.pkl')
-val_indices_file = os.path.join(data_root, 'val36_imgid2idx_small.pkl')
-train_ids_file = os.path.join(data_root, 'train_ids_small.pkl')
-val_ids_file = os.path.join(data_root, 'val_ids_small.pkl')
+infile = os.path.join(data_root, 'full_2014.tsv')
+train_data_file = os.path.join(data_root, 'train36.hdf5')
+val_data_file = os.path.join(data_root, 'val36.hdf5')
+train_indices_file = os.path.join(data_root, 'train36_imgid2idx.pkl')
+val_indices_file = os.path.join(data_root, 'val36_imgid2idx.pkl')
+train_ids_file = os.path.join(data_root, 'train_ids.pkl')
+val_ids_file = os.path.join(data_root, 'val_ids.pkl')
 
 feature_length = 2048
 num_fixed_boxes = 36
@@ -51,8 +50,8 @@ if __name__ == '__main__':
         train_imgids = cPickle.load(open(train_ids_file))
         val_imgids = cPickle.load(open(val_ids_file))
     else:
-        train_imgids = utils.load_imageid(os.path.join(data_root, 'google_refexp_train_201511_coco_aligned.json'))
-        val_imgids = utils.load_imageid(os.path.join(data_root, 'google_refexp_val_201511_coco_aligned.json'))
+        train_imgids = utils.load_imageid(os.path.join(data_root, 'google_refexp_train_201511_coco_aligned_and_labeled.json'))
+        val_imgids = utils.load_imageid(os.path.join(data_root, 'google_refexp_val_201511_coco_aligned_and_labeled.json'))
         cPickle.dump(train_imgids, open(train_ids_file, 'wb'))
         cPickle.dump(val_imgids, open(val_ids_file, 'wb'))
 
@@ -123,7 +122,6 @@ if __name__ == '__main__':
                  scaled_width,
                  scaled_height),
                 axis=1)
-
             if image_id in tsv_train_img_ids:
                 tsv_train_img_ids.remove(image_id)
                 train_indices[image_id] = train_counter
@@ -145,10 +143,10 @@ if __name__ == '__main__':
             else:
                 print('Unknown image id: %d' % image_id)
 
-    if len(train_imgids) != 0:
+    if len(tsv_train_img_ids) != 0:
         print('Warning: train_image_ids is not empty')
 
-    if len(val_imgids) != 0:
+    if len(tsv_val_img_ids) != 0:
         print('Warning: val_image_ids is not empty')
 
     cPickle.dump(train_indices, open(train_indices_file, 'wb'))

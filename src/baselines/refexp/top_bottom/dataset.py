@@ -78,14 +78,12 @@ def _load_dataset(dataroot, name, img_id2val):
     name: 'train', 'val'
     """
     refex_path = os.path.join(
-         #dataroot, 'google_refexp_%s_201511_coco_aligned.json' % name)
-         dataroot, 'google_refexp_val_201511_coco_aligned_and_labeled.json')
+         dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled.json' % name)
+         # dataroot, 'google_refexp_val_201511_coco_aligned_and_labeled.json')
     data = json.load(open(refex_path))
     refexps = data['refexps']
     images = data['images']
     annotations = data['annotations']
-    ## Annotations have image_id field that links to images; have refex_ids field; each indexes into refexps
-    ## Basically single image can have multiple reference expressions
     
     entries = []
     for annotation_id in annotations:
@@ -110,23 +108,17 @@ class RefExpFeatureDataset(Dataset):
         super(RefExpFeatureDataset, self).__init__()
         assert name in ['train', 'val']
 
-        #ans2label_path = os.path.join(dataroot, 'cache', 'trainval_ans2label.pkl')
-        #label2ans_path = os.path.join(dataroot, 'cache', 'trainval_label2ans.pkl')
-        #self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
-        #self.label2ans = cPickle.load(open(label2ans_path, 'rb'))
-        #self.num_ans_candidates = len(self.ans2label)
-
         self.dictionary = dictionary
 
         self.img_id2idx = cPickle.load(
-            #open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
-            open(os.path.join(dataroot, 'train36_imgid2idx_small.pkl')))
+            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
+            #open(os.path.join(dataroot, 'train36_imgid2idx_small.pkl')))
 
 
         print('loading features from h5 file')
         # Load the feature file provided by Zarana here
-        # h5_path = os.path.join(dataroot, '%s36_small.hdf5' % name)
-        h5_path = os.path.join(dataroot, 'train36_small.hdf5')
+        h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
+        # h5_path = os.path.join(dataroot, 'train36_small.hdf5')
         with h5py.File(h5_path, 'r') as hf:
             self.features = np.array(hf.get('image_features'))
             self.spatials = np.array(hf.get('spatial_features'))
@@ -162,7 +154,6 @@ class RefExpFeatureDataset(Dataset):
         for entry in self.entries:
             refexp = torch.from_numpy(np.array(entry['r_token']))
             entry['r_token'] = refexp
-            # Doubt this: does the img_idx dictionary line up with the reference_expressions dictionary??
             entry['gold_box'] = torch.LongTensor(1).fill_(entry['gold_box'])
 
     def __getitem__(self, index):

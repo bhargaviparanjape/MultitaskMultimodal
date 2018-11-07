@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument('--mode', type=str, default="train")
     parser.add_argument('--analysis_file', type=str, default="saved_models/analysis.json")
     parser.add_argument('--model_file', type=str, default="saved_models/exp0/model.pth")
+    parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     args = parser.parse_args()
     return args
@@ -43,11 +44,11 @@ if __name__ == '__main__':
     eval_dset = RefExpFeatureDataset('val', dictionary, data_root)
     batch_size = args.batch_size
     constructor = 'build_%s' % args.model
-    #model = getattr(base_model, constructor)(train_dset, args.num_hid).cuda()
-    model = getattr(base_model, constructor)(train_dset, args.num_hid)
+    model = getattr(base_model, constructor)(train_dset, args.num_hid).cuda()
+    #model = getattr(base_model, constructor)(train_dset, args.num_hid)
     model.w_emb.init_embedding(os.path.join(data_root, 'glove6b_init_300d.npy'))
 
-    #model = nn.DataParallel(model).cuda()
+    model = nn.DataParallel(model).cuda()
 
     train_loader = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
     eval_loader =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=1)
