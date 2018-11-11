@@ -7,6 +7,7 @@ import utils
 import h5py
 import torch
 from torch.utils.data import Dataset
+import pdb
 
 
 class Dictionary(object):
@@ -79,8 +80,11 @@ def _load_dataset(dataroot, name, img_id2val):
     dataroot: root path of dataset
     name: 'train', 'val'
     """
-    question_path = os.path.join(
-        dataroot, 'v2_OpenEnded_mscoco_%s2014_questions.json' % name)
+    if name == "val":
+        question_path = os.path.join(dataroot, "v2_OpenEnded_mscoco_val2014_questions.json")
+    else:
+        question_path = os.path.join(
+            dataroot, 'v2_OpenEnded_mscoco_%s2014_questions_filtered.json' % name)
     questions = sorted(json.load(open(question_path))['questions'],
                        key=lambda x: x['question_id'])
     answer_path = os.path.join(dataroot, 'cache', '%s_target.pkl' % name)
@@ -108,7 +112,6 @@ class VQAFeatureDataset(Dataset):
         self.ans2label = cPickle.load(open(ans2label_path, 'rb'))
         self.label2ans = cPickle.load(open(label2ans_path, 'rb'))
         self.num_ans_candidates = len(self.ans2label)
-
         self.dictionary = dictionary
 
         self.img_id2idx = cPickle.load(

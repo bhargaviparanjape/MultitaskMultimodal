@@ -9,6 +9,7 @@ import base_model
 from train import train, evaluate
 import json
 import utils
+import pdb
 
 
 def parse_args():
@@ -16,10 +17,11 @@ def parse_args():
     parser.add_argument('--epochs', type=int, default=30)
     parser.add_argument('--num_hid', type=int, default=1024)
     parser.add_argument('--model', type=str, default='baseline0_newatt')
-    parser.add_argument('--output', type=str, default='saved_models/exp0')
+    parser.add_argument('--output', type=str, default='saved_models/exp1')
     parser.add_argument('--mode', type=str, default="train")
     parser.add_argument('--analysis_file', type=str, default="saved_models/analysis.json")
-    parser.add_argument('--batch_size', type=int, default=512)
+    parser.add_argument('--model_file', type=str, default="saved_models/exp0/model.pth")
+    parser.add_argument('--batch_size', type=int, default=256)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     args = parser.parse_args()
     return args
@@ -42,10 +44,10 @@ if __name__ == '__main__':
     model.w_emb.init_embedding('data/glove6b_init_300d.npy')
 
     model = nn.DataParallel(model).cuda()
+    #model = model.cuda()
 
     train_loader = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
     eval_loader =  DataLoader(eval_dset, batch_size, shuffle=True, num_workers=1)
-    train(model, train_loader, eval_loader, args.epochs, args.output)
     if args.mode == "train":
         train(model, train_loader, eval_loader, args.epochs, args.output)
     else:
@@ -59,7 +61,9 @@ if __name__ == '__main__':
                 answer = item[-1]
                 # q_tokens = [dictionary.idx2word[id] for id in item[-2]]
                 dict_ = {
-                    "question_id" : item[0],
-                    "answer_id" : answer
+                    "question_id" : item[1],
+                    "answer_id" : answer,
+                    "answer_tokens" : eval_dset.label2ans[answer],
+                    "image_id" : item[0]
                 }
                 fout.write(json.dumps(dict_) + "\n")

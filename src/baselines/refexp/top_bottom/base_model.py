@@ -25,12 +25,13 @@ class BaseRefexModel(nn.Module):
         """
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
-
-        logits = self.v_att(v, q_emb)
+        
+        vs = torch.cat((v,b), dim=2)
+        logits = self.v_att(vs, q_emb)
         return logits
 
 def build_refex_baseline(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    v_att = NewAttention(dataset.v_dim, q_emb.num_hid, num_hid)
+    v_att = NewAttention(dataset.v_dim + dataset.s_dim, q_emb.num_hid, num_hid)
     return BaseRefexModel(w_emb, q_emb, v_att)

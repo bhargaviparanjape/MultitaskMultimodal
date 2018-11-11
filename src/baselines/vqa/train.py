@@ -75,7 +75,8 @@ def eval(model, dataloader):
         b = Variable(b, volatile=True).cuda()
         q = Variable(q, volatile=True).cuda()
         pred = model(v, b, q, None)
-        batch_score, logits = compute_score_with_logits(pred, a.cuda()).sum()
+        batch_score, logits = compute_score_with_logits(pred, a.cuda())
+        batch_score = batch_score.sum()
         score += batch_score
         upper_bound += (a.max(1)[0]).sum()
         num_data += pred.size(0)
@@ -95,16 +96,16 @@ def evaluate(model, dataloader):
         b = Variable(b, volatile=True).cuda()
         q = Variable(q, volatile=True).cuda()
         pred = model(v, b, q, None)
-        batch_score, predicted_logits = compute_score_with_logits(pred, a.cuda()).sum()
+        batch_score, predicted_logits = compute_score_with_logits(pred, a.cuda())
+        batch_score = batch_score.sum()
         score += batch_score
         upper_bound += (a.max(1)[0]).sum()
         num_data += pred.size(0)
-
         # iterate over batch and populate result_log
         for i in range(v.size(0)):
             result_log.append(
-                [image_id[i], question_id[i], predicted_logits[i]])
+                [image_id[i].item(), question_id[i].item(), predicted_logits[i].item()])
 
     score = score / len(dataloader.dataset)
     upper_bound = upper_bound / len(dataloader.dataset)
-    return score, upper_bound, result_log
+    return score, result_log
