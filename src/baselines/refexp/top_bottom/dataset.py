@@ -7,6 +7,7 @@ import utils
 import h5py
 import torch
 from torch.utils.data import Dataset
+import pdb
 
 
 class Dictionary(object):
@@ -77,8 +78,11 @@ def _load_dataset(dataroot, name, img_id2val):
     dataroot: root path of dataset
     name: 'train', 'val'
     """
-    refex_path = os.path.join(
-         dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled.json' % name)
+    if name == "val":
+        refex_path = os.path.join(dataroot, "google_refexp_val_201511_coco_aligned_and_labeled.json")
+    else:
+        refex_path = os.path.join(
+            dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled_filtered.json' % name)
          # dataroot, 'google_refexp_val_201511_coco_aligned_and_labeled.json')
     data = json.load(open(refex_path))
     refexps = data['refexps']
@@ -167,7 +171,6 @@ class RefExpFeatureDataset(Dataset):
         refexp_id = entry['refexp_id']
         image_id = entry['image_id']
         annotation_id = entry['annotation_id']
-
         return features, spatials, refexp, gold_box, image_id, annotation_id, refexp_id
 
     def __len__(self):

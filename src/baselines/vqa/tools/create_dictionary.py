@@ -11,7 +11,7 @@ def create_dictionary(dataroot):
     dictionary = Dictionary()
     questions = []
     files = [
-        'v2_OpenEnded_mscoco_train2014_questions.json',
+        'v2_OpenEnded_mscoco_train2014_questions_filtered.json',
         'v2_OpenEnded_mscoco_val2014_questions.json',
         'v2_OpenEnded_mscoco_test2015_questions.json',
         'v2_OpenEnded_mscoco_test-dev2015_questions.json'

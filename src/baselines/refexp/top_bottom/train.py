@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import utils
 from torch.autograd import Variable
+import pdb
 
 
 def instance_bce_with_logits(logits, labels):
@@ -131,7 +132,7 @@ def evaluate(model, dataloader):
 
         # iterate over batch and populate result_log
         for i in range(v.size(0)):
-            result_log.append([image_id[i], annotation_id[i], refexp_id[i], predicted_labels[i], q_vector[i].numpy(), a[i]])
+            result_log.append([image_id[i].item(), annotation_id[i].item(), refexp_id[i].item(), predicted_labels[i].item(), q_vector[i].numpy()])
 
     score = 100 * score / len(dataloader.dataset)
     return score, result_log

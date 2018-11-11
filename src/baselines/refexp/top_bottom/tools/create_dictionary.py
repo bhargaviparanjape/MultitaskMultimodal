@@ -13,8 +13,8 @@ def create_dictionary(dataroot):
     questions = []
     # Aligned Data from MSCOCO and Google Referential Expressions
     files = [
-        'google_refexp_train_201511_coco_aligned_and_labeled.json',
-        'google_refexp_val_201511_coco_aligned_and_labeled.json',
+        'google_refexp_train_201511_coco_aligned_and_labeled_filtered.json',
+        'google_refexp_val_201511_coco_aligned_and_labeled_filtered.json',
     ]
     for path in files:
         question_path = os.path.join(dataroot, path)
