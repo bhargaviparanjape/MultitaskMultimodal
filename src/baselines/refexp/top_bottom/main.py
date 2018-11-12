@@ -67,6 +67,6 @@ if __name__ == '__main__':
                     "annotation_id" : item[1],
                     "refexp_id" : item[2],
                     "predicted_id" : item[3],
-                    "logits": item[5]
+                    "logits": list(map(float, item[5])),
                 }
                 fout.write(json.dumps(dict_) + "\n")
