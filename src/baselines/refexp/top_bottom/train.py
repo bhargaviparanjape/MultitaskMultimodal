@@ -132,7 +132,14 @@ def evaluate(model, dataloader):
 
         # iterate over batch and populate result_log
         for i in range(v.size(0)):
-            result_log.append([image_id[i].item(), annotation_id[i].item(), refexp_id[i].item(), predicted_labels[i].item(), q_vector[i].numpy()])
+            result_log.append([
+                image_id[i].item(),
+                annotation_id[i].item(),
+                refexp_id[i].item(),
+                predicted_labels[i].item(),
+                q_vector[i].numpy(),
+                pred[i].numpy()
+            ])
 
     score = 100 * score / len(dataloader.dataset)
     return score, result_log
