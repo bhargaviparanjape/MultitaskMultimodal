@@ -61,12 +61,12 @@ if __name__ == '__main__':
         score, analysis_log = evaluate(model, eval_loader)
         with open(args.analysis_file, "w+") as fout:
             for item in analysis_log:
-                gold_box = item[-2]
                 # q_tokens = [dictionary.idx2word[id] for id in item[-1]]
                 dict_ = {
                     "image_id" : item[0],
                     "annotation_id" : item[1],
                     "refexp_id" : item[2],
-                    "predicted_id" : gold_box
+                    "predicted_id" : item[3],
+                    "logits": item[5]
                 }
                 fout.write(json.dumps(dict_) + "\n")
