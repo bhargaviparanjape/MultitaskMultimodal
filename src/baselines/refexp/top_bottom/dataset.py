@@ -116,7 +116,7 @@ class RefExpFeatureDataset(Dataset):
         self.dictionary = dictionary
 
         self.img_id2idx = cPickle.load(
-            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % ('train' if name == 'val_heldout' else name)))
+            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % ('train' if name == 'val_heldout' else name))))
             #open(os.path.join(dataroot, 'train36_imgid2idx_small.pkl')))
 
 
