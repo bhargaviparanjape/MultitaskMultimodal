@@ -138,7 +138,7 @@ def evaluate(model, dataloader):
                 refexp_id[i].item(),
                 predicted_labels[i].item(),
                 q_vector[i].numpy(),
-                pred[i].numpy()
+                pred[i].detach().numpy()
             ])
 
     score = 100 * score / len(dataloader.dataset)
