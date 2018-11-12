@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     dictionary = Dictionary.load_from_file(os.path.join(data_root, 'dictionary.pkl'))
     train_dset = RefExpFeatureDataset('train', dictionary, data_root)
-    eval_dset = RefExpFeatureDataset('val_heldout' if mode == "eval_heldout" else 'val', dictionary, data_root)
+    eval_dset = RefExpFeatureDataset('val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
     batch_size = args.batch_size
     constructor = 'build_%s' % args.model
     model = getattr(base_model, constructor)(train_dset, args.num_hid)
