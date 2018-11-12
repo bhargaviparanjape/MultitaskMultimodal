@@ -76,10 +76,12 @@ def _load_dataset(dataroot, name, img_id2val):
 
     img_id2val: dict {img_id -> val} val can be used to retrieve image or features
     dataroot: root path of dataset
-    name: 'train', 'val'
+    name: 'train', 'val', 'val_heldout'
     """
     if name == "val":
         refex_path = os.path.join(dataroot, "google_refexp_val_201511_coco_aligned_and_labeled.json")
+    elif name == "val_heldout":
+        refex_path = os.path.join(dataroot, "google_refexp_val_201511_coco_aligned_and_labeled_heldout.json")
     else:
         refex_path = os.path.join(
             dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled_filtered.json' % name)
@@ -102,7 +104,6 @@ def _load_dataset(dataroot, name, img_id2val):
         for id_ in refexp_ids:
             refexp = refexps[str(id_)]
             entries.append(_create_entry(img, image_id, annotation_id_, refexp, gold_box))
-            
 
     return entries
 
@@ -110,18 +111,18 @@ def _load_dataset(dataroot, name, img_id2val):
 class RefExpFeatureDataset(Dataset):
     def __init__(self, name, dictionary, dataroot='data'):
         super(RefExpFeatureDataset, self).__init__()
-        assert name in ['train', 'val']
+        assert name in ['train', 'val', 'val_heldout']
 
         self.dictionary = dictionary
 
         self.img_id2idx = cPickle.load(
-            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % name)))
+            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % ('train' if name == 'val_heldout' else name)))
             #open(os.path.join(dataroot, 'train36_imgid2idx_small.pkl')))
 
 
         print('loading features from h5 file')
         # Load the feature file provided by Zarana here
-        h5_path = os.path.join(dataroot, '%s36.hdf5' % name)
+        h5_path = os.path.join(dataroot, '%s36.hdf5' % ('train' if name == 'val_heldout' else name))
         # h5_path = os.path.join(dataroot, 'train36_small.hdf5')
         with h5py.File(h5_path, 'r') as hf:
             self.features = np.array(hf.get('image_features'))
