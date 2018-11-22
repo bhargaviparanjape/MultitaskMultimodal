@@ -112,6 +112,8 @@ def _load_dataset(task, dataroot, name, img_id2val):
             img_id = question['image_id']
             vqa_entries.append(_create_entry(img_id2val[img_id], question, answer))
 
+        print("Loaded VQA : {0}".format(len(vqa_entries)))
+
     #REF
     ref_entries = []
     if task == "ref" or task == "ref_vqa":
@@ -133,6 +135,7 @@ def _load_dataset(task, dataroot, name, img_id2val):
                 ref_entries.append(
                     _create_entry(img=img, image_id=image_id, annotation_id=annotation_id_, refexp=refexp,
                                   gold_box=gold_box))
+        print("Loaded Ref : {0}".format(len(ref_entries)))
 
     return vqa_entries, ref_entries
 

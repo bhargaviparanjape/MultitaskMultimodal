@@ -16,11 +16,11 @@ import json
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--epochs', type=int, default=30)
-    parser.add_argument('data_root', type=str, default=None)
+    parser.add_argument('--data_root', type=str, default=None)
     parser.add_argument('--num_hid', type=int, default=1024)
     parser.add_argument('--model', type=str, default='multitask')
     parser.add_argument('--output', type=str, default='saved_models/exp2')
-    parser.add_argument('--mode', type=str, default="train")
+    parser.add_argument('--mode', type=str, default="train", help='train, eval_heldout')
     parser.add_argument('--analysis_file', type=str, default="saved_models/analysis_exp1.json")
     parser.add_argument('--model_file', type=str, default="saved_models/exp1/model.pth")
     parser.add_argument('--batch_size', type=int, default=512)
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         print("ERROR: Give valid combination!")
 
 
-
+    exit(-1)
 
     if torch.cuda.is_available():
         model = model.cuda()
