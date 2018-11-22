@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument('--output', type=str, default='saved_models/exp2')
     parser.add_argument('--mode', type=str, default="train", help='train, eval_heldout')
     parser.add_argument('--analysis_file', type=str, default="saved_models/analysis_exp1.json")
-    parser.add_argument('--model_file', type=str, default="saved_models/exp1/model.pth")
+    parser.add_argument('--model_file', type=str, default="saved_models/model_multi_best.pth")
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     parser.add_argument('--task', choices=["vqa", "ref", "ref_vqa"], type=str)
@@ -95,7 +95,7 @@ if __name__ == '__main__':
             score, analysis_log = evaluate(model, eval_loaders['vqa'], 'vqa')
 
             # obtain answers dictionary
-            with open(args.analysis_file+'.vqa', "w+") as fout:
+            with open(args.output+'/analysis_vqa.json', "w+") as fout:
                 for item in analysis_log:
                     answer = item[-1]
                     # q_tokens = [dictionary.idx2word[id] for id in item[-2]]
@@ -109,7 +109,7 @@ if __name__ == '__main__':
 
         elif args.task == 'ref' or args.task == 'ref_vqa':
             score, analysis_log = evaluate(model, eval_loaders['ref'], 'ref')
-            with open(args.analysis_file+'.ref', "w+") as fout:
+            with open(args.output+'/analysis_ref.json', "w+") as fout:
                 for item in analysis_log:
                     # q_tokens = [dictionary.idx2word[id] for id in item[-1]]
                     dict_ = {
