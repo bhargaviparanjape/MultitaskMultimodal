@@ -33,7 +33,7 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-
+    print(args)
     torch.manual_seed(args.seed)
     torch.cuda.manual_seed(args.seed)
     torch.backends.cudnn.benchmark = True
@@ -45,15 +45,15 @@ if __name__ == '__main__':
     dictionary = Dictionary.load_from_file(args.dictionary)  #TODO: Combine all the dictionary.pkl BEFORE!
 
     if args.task == "ref_vqa":
-        train_dset_vqa = FeatureDataset(args.task,'train', dictionary)
-        eval_dset_vqa = FeatureDataset(args.task,'val', dictionary)
+        train_dset_vqa = FeatureDataset(args.task,'train', dictionary,data_root)
+        eval_dset_vqa = FeatureDataset(args.task,'val', dictionary,data_root)
         train_dset_ref = FeatureDataset(args.task,'train', dictionary, data_root)
         eval_dset_ref = FeatureDataset(args.task,'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
         model = getattr(base_model, constructor)(args.task, [train_dset_vqa, train_dset_ref], args.num_hid)
 
     elif args.task == "vqa":
-        train_dset = FeatureDataset(args.task,'train', dictionary)
-        eval_dset =  FeatureDataset(args.task,'val', dictionary)
+        train_dset = FeatureDataset(args.task,'train', dictionary,data_root)
+        eval_dset =  FeatureDataset(args.task,'val', dictionary,data_root)
         model = getattr(base_model, constructor)(args.task, [train_dset], args.num_hid)
 
     elif args.task == "ref":
