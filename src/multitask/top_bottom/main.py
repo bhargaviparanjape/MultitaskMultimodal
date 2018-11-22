@@ -45,10 +45,10 @@ if __name__ == '__main__':
     dictionary = Dictionary.load_from_file(args.dictionary)  #TODO: Combine all the dictionary.pkl BEFORE!
 
     if args.task == "ref_vqa":
-        train_dset_vqa = FeatureDataset(args.task,'train', dictionary,data_root)
-        eval_dset_vqa = FeatureDataset(args.task,'val', dictionary,data_root)
-        train_dset_ref = FeatureDataset(args.task,'train', dictionary, data_root)
-        eval_dset_ref = FeatureDataset(args.task,'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
+        train_dset_vqa = FeatureDataset("vqa",'train', dictionary,data_root)
+        eval_dset_vqa = FeatureDataset("vqa",'val', dictionary,data_root)
+        train_dset_ref = FeatureDataset("ref",'train', dictionary, data_root)
+        eval_dset_ref = FeatureDataset("ref",'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
         model = getattr(base_model, constructor)(args.task, [train_dset_vqa, train_dset_ref], args.num_hid)
 
     elif args.task == "vqa":
