@@ -64,9 +64,6 @@ if __name__ == '__main__':
     else:
         print("ERROR: Give valid combination!")
 
-
-    exit(-1)
-
     if torch.cuda.is_available():
         model = model.cuda()
     #model = getattr(base_model, constructor)(train_dset, args.num_hid)
@@ -74,22 +71,52 @@ if __name__ == '__main__':
     
     if torch.cuda.is_available():
         model = nn.DataParallel(model).cuda()
-    train_loader = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
-    eval_loader =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=1)
+
+    # task-specific data loaders
+    train_loaders = {'vqa': None, 'ref': None}
+    eval_loaders = {'vqa': None, 'ref': None}
+
+    if args.task == 'vqa' or args.task == 'ref':
+        train_loaders['vqa'] = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
+        eval_loaders['vqa'] =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=1)
+
+    else:
+        train_loaders['vqa'] = DataLoader(train_dset_vqa, batch_size, shuffle=True, num_workers=1)
+        eval_loaders['vqa'] = DataLoader(eval_dset_vqa, batch_size, shuffle=False, num_workers=1)
+        train_loaders['ref'] = DataLoader(train_dset_ref, batch_size, shuffle=True, num_workers=1)
+        eval_loaders['ref'] = DataLoader(eval_dset_ref, batch_size, shuffle=False, num_workers=1)
+
     if args.mode == "train":
-        train(model, train_loader, eval_loader, args.epochs, args.output)
+        train(model, train_loaders, eval_loaders, args.epochs, args.output)
     else:
         checkpoint = torch.load(args.model_file)
         model.load_state_dict(checkpoint)
-        score, analysis_log = evaluate(model, eval_loader)
-        with open(args.analysis_file, "w+") as fout:
-            for item in analysis_log:
-                # q_tokens = [dictionary.idx2word[id] for id in item[-1]]
-                dict_ = {
-                    "image_id" : item[0],
-                    "annotation_id" : item[1],
-                    "refexp_id" : item[2],
-                    "predicted_id" : item[3],
-                    "logits": list(map(float, item[5])),
-                }
-                fout.write(json.dumps(dict_) + "\n")
+        if args.task == 'vqa' or args.task == 'ref_vqa':
+            score, analysis_log = evaluate(model, eval_loaders['vqa'], 'vqa')
+
+            # obtain answers dictionary
+            with open(args.analysis_file+'.vqa', "w+") as fout:
+                for item in analysis_log:
+                    answer = item[-1]
+                    # q_tokens = [dictionary.idx2word[id] for id in item[-2]]
+                    dict_ = {
+                        "question_id": item[1],
+                        "answer_id": answer,
+                        "answer_tokens": eval_dset.label2ans[answer],
+                        "image_id": item[0]
+                    }
+                    fout.write(json.dumps(dict_) + "\n")
+
+        elif args.task == 'ref' or args.task == 'ref_vqa':
+            score, analysis_log = evaluate(model, eval_loaders['ref'], 'ref')
+            with open(args.analysis_file+'.ref', "w+") as fout:
+                for item in analysis_log:
+                    # q_tokens = [dictionary.idx2word[id] for id in item[-1]]
+                    dict_ = {
+                        "image_id" : item[0],
+                        "annotation_id" : item[1],
+                        "refexp_id" : item[2],
+                        "predicted_id" : item[3],
+                        "logits": list(map(float, item[5])),
+                    }
+                    fout.write(json.dumps(dict_) + "\n")

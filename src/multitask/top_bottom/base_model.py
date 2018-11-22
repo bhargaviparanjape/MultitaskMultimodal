@@ -26,6 +26,7 @@ class BaseModel(nn.Module):
 
         return: logits, not probs
         """
+        logits = None
         w_emb = self.w_emb(q)
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
@@ -38,7 +39,7 @@ class BaseModel(nn.Module):
             joint_repr = q_repr * v_repr
             logits = self.classifier(joint_repr)
 
-        else:
+        elif task == 'ref':
             vs = torch.cat((v, b), dim=2)
             logits, att = self.v_att(vs, q_emb)
 

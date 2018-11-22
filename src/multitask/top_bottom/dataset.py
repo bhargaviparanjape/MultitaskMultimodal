@@ -95,7 +95,7 @@ def _load_dataset(task, dataroot, name, img_id2val):
         question_path = os.path.join(dataroot, "v2_OpenEnded_mscoco_val2014_questions.json")
         refex_path = os.path.join(dataroot, "google_refexp_val_201511_coco_aligned_and_labeled.json")
     elif name == "val_heldout":
-	question_path = os.path.join(dataroot,"v2_OpenEnded_mscoco_val2014_questions_heldout.json")
+        question_path = os.path.join(dataroot,"v2_OpenEnded_mscoco_val2014_questions_heldout.json")
         refex_path = os.path.join(dataroot, "google_refexp_val_201511_coco_aligned_and_labeled_heldout.json")
     else:
         question_path = os.path.join(
@@ -108,18 +108,19 @@ def _load_dataset(task, dataroot, name, img_id2val):
     if task == "vqa" or task == "ref_vqa":
         questions = sorted(json.load(open(question_path))['questions'],
                            key=lambda x: x['question_id'])
-	question_ids = set()
-	for question in questions:
-	    question_ids.add(question['question_id'])
+        question_ids = set()
+        for question in questions:
+                question_ids.add(question['question_id'])
         answer_path = os.path.join(dataroot, 'cache', '%s_target.pkl' % name)
         answers = cPickle.load(open(answer_path, 'rb'))
         answers = sorted(answers, key=lambda x: x['question_id'])
-	#Only keep answers in question_ids
-	answers_filtered = []
-	for answer in answers:
-	    if answer['question_id'] in question_ids:
-		answers_filtered.append(answer)
-	answers = answers_filtered
+
+        #Only keep answers in question_ids
+        answers_filtered = []
+        for answer in answers:
+            if answer['question_id'] in question_ids:
+                answers_filtered.append(answer)
+        answers = answers_filtered
         utils.assert_eq(len(questions), len(answers))
 
         for question, answer in zip(questions, answers):
@@ -155,6 +156,7 @@ def _load_dataset(task, dataroot, name, img_id2val):
 
     return vqa_entries, ref_entries
 
+
 class FeatureDataset(Dataset):
     def __init__(self,task, name, dictionary, dataroot='data',):
         super(FeatureDataset, self).__init__()
@@ -172,14 +174,13 @@ class FeatureDataset(Dataset):
         self.dictionary = dictionary
         self.img_id2idx = cPickle.load(
             open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % ('train' if name == 'val_heldout' else name))))
-	'''
+
         print('loading features from h5 file')
         h5_path = os.path.join(dataroot, '%s36.hdf5' % ('train' if name == 'val_heldout' else name))
         with h5py.File(h5_path, 'r') as hf:
             self.features = np.array(hf.get('image_features'))
             self.spatials = np.array(hf.get('spatial_features'))
 
-	'''
         self.vqa_entries, self.ref_entries = _load_dataset(task,dataroot, name, self.img_id2idx)
 
         self.tokenize()
