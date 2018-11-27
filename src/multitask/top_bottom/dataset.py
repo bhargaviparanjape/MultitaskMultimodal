@@ -162,6 +162,7 @@ class FeatureDataset(Dataset):
         super(FeatureDataset, self).__init__()
         assert name in ['train', 'val','val_heldout']
         self.task = task
+	self.num_ans_candidates = 100
 
         #VQA
         if task == "vqa" or task == 'ref_vqa':
@@ -240,8 +241,9 @@ class FeatureDataset(Dataset):
             entry['gold_box'] = torch.LongTensor(1).fill_(entry['gold_box'])
 
     def __getitem__(self, index):
-        feats = {'question_id': None, 'question': None, 'target': None, 'image_id': None, 'annotation_id': None,
-                 'refexp_id': None, 'refexp': None, 'gold_box': None}
+        #feats = {'question_id': None, 'question': None, 'target': None, 'image_id': None, 'annotation_id': None,
+         #        'refexp_id': None, 'refexp': None, 'gold_box': None}
+	feats = {}
 
         if len(self.vqa_entries) > 0:
             entry = self.vqa_entries[index]

@@ -42,11 +42,16 @@ def train(task, model, train_loaders, eval_loaders, num_epochs, output):
 
         # VQA training loop
         if task == 'vqa' or (task == 'ref_vqa' and sampler < 0.3):
-            logger.write('epoch %d : VQA Training', epoch)
+            logger.write('epoch %d : VQA Training' % epoch)
             train_loader = train_loaders['vqa']
-            eval_loader = eval_loader['vqa']
+            eval_loader = eval_loaders['vqa']
 
-            for i, (v, b, q, a, image_id, question_id) in enumerate(train_loader):
+            for i, (v, b, feats) in enumerate(train_loader):
+	        q = feats['question']
+		a = feats['target']
+		image_id = feats['image_id']
+		question_id = feats['question_id']
+
                 v = Variable(v).cuda()
                 b = Variable(b).cuda()
                 q = Variable(q).cuda()
@@ -77,11 +82,17 @@ def train(task, model, train_loaders, eval_loaders, num_epochs, output):
 
         # Refexp training loop
         else:
-            logger.write('epoch %d : RefExp Training', epoch)
+            logger.write('epoch %d : RefExp Training' % epoch)
             train_loader = train_loaders['ref']
             eval_loader = eval_loaders['ref']
 
-            for i, (v, b, q, a, image_id, annotation_id, refexp_id) in enumerate(train_loader):
+            for i, (v, b, feats) in enumerate(train_loader):
+	        q = feats['refexp']
+		a = feats['gold_box']
+		image_id = feats['image_id']
+		annotation_id = feats['annotation_id']
+		refexp_id = feats['refexp_id']
+
                 if torch.cuda.is_available():
                     v = Variable(v).cuda()
                     b = Variable(b).cuda()

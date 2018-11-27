@@ -48,11 +48,8 @@ class BaseModel(nn.Module):
 
 def build_multitask(task, dataset, num_hid):
 
-    ntokens = 0
-    num_ans_candidates = 0
-    for data in dataset:
-        ntokens += data.dictionary.ntoken
-        num_ans_candidates += data.num_ans_candidates
+    ntokens = dataset.dictionary.ntoken
+    num_ans_candidates = dataset.num_ans_candidates
 
     w_emb = WordEmbedding(ntokens, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)

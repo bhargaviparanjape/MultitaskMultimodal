@@ -67,7 +67,7 @@ if __name__ == '__main__':
     if torch.cuda.is_available():
         model = model.cuda()
     #model = getattr(base_model, constructor)(train_dset, args.num_hid)
-    model.w_emb.init_embedding(os.path.join(data_root, 'glove6b_init_300d.npy'))
+    model.w_emb.init_embedding(os.path.join(data_root, 'glove_6b_common_300d.npy'))
     
     if torch.cuda.is_available():
         model = nn.DataParallel(model).cuda()
@@ -76,9 +76,13 @@ if __name__ == '__main__':
     train_loaders = {'vqa': None, 'ref': None}
     eval_loaders = {'vqa': None, 'ref': None}
 
-    if args.task == 'vqa' or args.task == 'ref':
+    if args.task == 'vqa':
         train_loaders['vqa'] = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
         eval_loaders['vqa'] =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=1)
+
+    elif args.task == 'ref':
+	train_loaders['ref'] = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
+	eval_loaders['ref'] =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=1)
 
     else:
         train_loaders['vqa'] = DataLoader(train_dset_vqa, batch_size, shuffle=True, num_workers=1)
