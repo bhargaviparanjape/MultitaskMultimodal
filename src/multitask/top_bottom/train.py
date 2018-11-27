@@ -27,7 +27,7 @@ def compute_score_with_logits(logits, labels):
     return (logits == labels).sum(), logits
 
 
-def train(model, train_loaders, eval_loaders, num_epochs, output):
+def train(task, model, train_loaders, eval_loaders, num_epochs, output):
     utils.create_dir(output)
     optim = torch.optim.Adamax(model.parameters())
     logger = utils.Logger(os.path.join(output, 'log.txt'))
@@ -41,7 +41,7 @@ def train(model, train_loaders, eval_loaders, num_epochs, output):
         sampler = random.uniform(0, 1)
 
         # VQA training loop
-        if sampler < 0.3:
+        if task == 'vqa' or (task == 'ref_vqa' and sampler < 0.3):
             logger.write('epoch %d : VQA Training', epoch)
             train_loader = train_loaders['vqa']
             eval_loader = eval_loader['vqa']

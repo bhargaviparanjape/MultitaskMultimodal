@@ -49,17 +49,17 @@ if __name__ == '__main__':
         eval_dset_vqa = FeatureDataset("vqa",'val', dictionary,data_root)
         train_dset_ref = FeatureDataset("ref",'train', dictionary, data_root)
         eval_dset_ref = FeatureDataset("ref",'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
-        model = getattr(base_model, constructor)(args.task, [train_dset_vqa, train_dset_ref], args.num_hid)
+        model = getattr(base_model, constructor)(args.task, train_dset_vqa, args.num_hid)
 
     elif args.task == "vqa":
         train_dset = FeatureDataset(args.task,'train', dictionary,data_root)
         eval_dset =  FeatureDataset(args.task,'val', dictionary,data_root)
-        model = getattr(base_model, constructor)(args.task, [train_dset], args.num_hid)
+        model = getattr(base_model, constructor)(args.task, train_dset, args.num_hid)
 
     elif args.task == "ref":
         train_dset =  FeatureDataset(args.task,'train', dictionary, data_root)
         eval_dset = FeatureDataset(args.task,'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
-        model = getattr(base_model, constructor)(args.task, [train_dset], args.num_hid)
+        model = getattr(base_model, constructor)(args.task, train_dset, args.num_hid)
 
     else:
         print("ERROR: Give valid combination!")
@@ -87,7 +87,7 @@ if __name__ == '__main__':
         eval_loaders['ref'] = DataLoader(eval_dset_ref, batch_size, shuffle=False, num_workers=1)
 
     if args.mode == "train":
-        train(model, train_loaders, eval_loaders, args.epochs, args.output)
+        train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output)
     else:
         checkpoint = torch.load(args.model_file)
         model.load_state_dict(checkpoint)
