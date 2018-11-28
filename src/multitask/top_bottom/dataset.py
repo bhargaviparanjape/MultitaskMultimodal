@@ -103,6 +103,10 @@ def _load_dataset(task, dataroot, name, img_id2val):
         refex_path = os.path.join(
             dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled_filtered.json' % name)
 
+    '''DEBUG'''
+    train_image_ids = [458752, 458752, 458752, 458752, 262146]
+    val_image_ids = [262148, 262148, 262148, 393225, 393225]
+
     #VQA
     vqa_entries = []
     if task == "vqa" or task == "ref_vqa":
@@ -140,6 +144,12 @@ def _load_dataset(task, dataroot, name, img_id2val):
 
         for annotation_id in annotations:
             image_id = annotations[annotation_id]['image_id']
+            if name == "train" and int(image_id) not in train_image_ids:
+                continue
+
+            if name == "val" or name == "val_heldout" and int(image_id) not in val_image_ids:
+                continue
+
             annotation_id_ = int(annotation_id)
             gold_box = annotations[annotation_id]['labels'].index(1)
             # gold_box = np.random.randint(36)
