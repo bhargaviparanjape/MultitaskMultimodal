@@ -70,8 +70,8 @@ if __name__ == '__main__':
     #model = getattr(base_model, constructor)(train_dset, args.num_hid)
     model.w_emb.init_embedding(os.path.join(data_root, 'glove_6b_common_300d.npy'))
     
-    #if torch.cuda.is_available():
-    #    model = nn.DataParallel(model).cuda()
+    if torch.cuda.is_available():
+        model = nn.DataParallel(model).cuda()
 
     # task-specific data loaders
     train_loaders = {'vqa': None, 'ref': None}

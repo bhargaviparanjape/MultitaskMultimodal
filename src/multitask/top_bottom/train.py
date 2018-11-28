@@ -156,7 +156,7 @@ def eval(model, dataloader, task='vqa'):
             b = Variable(b, volatile=True).cuda()
             q = Variable(q, volatile=True).cuda()
             pred = model(v, b, q, None, 'vqa')
-            batch_score, logits = compute_score_with_logits(pred, a.cuda())
+            batch_score, logits = compute_score_with_logits_vqa(pred, a.cuda())
             batch_score = batch_score.sum()
             score += batch_score
             upper_bound += (a.max(1)[0]).sum()
