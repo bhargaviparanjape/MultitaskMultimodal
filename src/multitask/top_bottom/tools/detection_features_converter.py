@@ -50,8 +50,10 @@ if __name__ == '__main__':
         train_imgids = cPickle.load(open(train_ids_file))
         val_imgids = cPickle.load(open(val_ids_file))
     else:
-        train_imgids = utils.load_imaeeid(os.path.join(data_root, 'google_refexp_train_201511_coco_aligned_and_labeled_filtered.json'))
-        val_imgids = utils.load_imageid(os.path.join(data_root, 'google_refexp_val_201511_coco_aligned_and_labeled_filtered.json'))
+        #train_imgids = utils.load_imageid(os.path.join(data_root, 'google_refexp_train_201511_coco_aligned_and_labeled_filtered.json'))
+        #val_imgids = utils.load_imageid(os.path.join(data_root, 'google_refexp_val_201511_coco_aligned_and_labeled_filtered.json'))
+        train_imgids = [458752, 458752, 458752, 458752, 262146]
+        val_imgids = [262148, 262148, 262148, 393225, 393225]
         cPickle.dump(train_imgids, open(train_ids_file, 'wb'))
         cPickle.dump(val_imgids, open(val_ids_file, 'wb'))
 
