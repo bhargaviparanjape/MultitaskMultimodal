@@ -65,6 +65,7 @@ if __name__ == '__main__':
         print("ERROR: Give valid combination!")
 
     if torch.cuda.is_available():
+        print('running model on CUDA')
         model = model.cuda()
     #model = getattr(base_model, constructor)(train_dset, args.num_hid)
     model.w_emb.init_embedding(os.path.join(data_root, 'glove_6b_common_300d.npy'))
