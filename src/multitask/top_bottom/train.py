@@ -21,6 +21,12 @@ def cross_entropy(logits, labels):
     loss = nn.functional.cross_entropy(logits, labels)
     return loss
 
+def compute_score_with_logits_vqa(logits, labels):
+    logits = torch.max(logits, 1)[1].data # argmax
+    one_hots = torch.zeros(*labels.size()).cuda()
+    one_hots.scatter_(1, logits.view(-1, 1), 1)
+    scores = (one_hots * labels)
+    return scores, logits
 
 def compute_score_with_logits(logits, labels):
     logits = torch.max(logits, 1)[1].data #argmax
@@ -62,7 +68,8 @@ def train(task, model, train_loaders, eval_loaders, num_epochs, output):
                 optim.step()
                 optim.zero_grad()
 
-                batch_score = compute_score_with_logits(pred, a.data).sum()
+                batch_score, predicted_logits = compute_score_with_logits_vqa(pred, a.data)
+		batch_score = batch_score.sum()
                 total_loss += loss.data[0] * v.size(0)
                 train_score += batch_score
 

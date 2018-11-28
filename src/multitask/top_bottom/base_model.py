@@ -31,7 +31,8 @@ class BaseModel(nn.Module):
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
 
         if task == 'vqa':
-            att_logits, att = self.v_att(v, q_emb)
+	    vs = torch.cat((v, b), dim=2)
+            att_logits, att = self.v_att(vs, q_emb)
             v_emb = (att * v).sum(1)  # [batch, v_dim]
 
             q_repr = self.q_net(q_emb)

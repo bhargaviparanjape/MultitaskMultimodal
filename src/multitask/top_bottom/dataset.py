@@ -188,6 +188,7 @@ class FeatureDataset(Dataset):
         self.tensorize()
         self.v_dim = self.features.size(2)
         self.s_dim = self.spatials.size(2)
+	print('v dim', self.v_dim, 's dim', self.s_dim)
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.
