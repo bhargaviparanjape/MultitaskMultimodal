@@ -47,10 +47,8 @@ def train(task, model, train_loaders, eval_loaders, num_epochs, output):
             eval_loader = eval_loaders['vqa']
 
             for i, (v, b, feats) in enumerate(train_loader):
-	        q = feats['question']
-		a = feats['target']
-		image_id = feats['image_id']
-		question_id = feats['question_id']
+                q = feats['question']
+                a = feats['target']
 
                 v = Variable(v).cuda()
                 b = Variable(b).cuda()
@@ -87,11 +85,8 @@ def train(task, model, train_loaders, eval_loaders, num_epochs, output):
             eval_loader = eval_loaders['ref']
 
             for i, (v, b, feats) in enumerate(train_loader):
-	        q = feats['refexp']
-		a = feats['gold_box']
-		image_id = feats['image_id']
-		annotation_id = feats['annotation_id']
-		refexp_id = feats['refexp_id']
+                q = feats['refexp']
+                a = feats['gold_box']
 
                 if torch.cuda.is_available():
                     v = Variable(v).cuda()
@@ -146,11 +141,14 @@ def eval(model, dataloader, task='vqa'):
     num_data = 0
     if task == 'vqa':
         upper_bound = 0
-        for v, b, q, a, image_id, question_id in iter(dataloader):
+        for i, (v, b, feats) in enumerate(dataloader):
+            q = feats['question']
+            a = feats['target']
+
             v = Variable(v, volatile=True).cuda()
             b = Variable(b, volatile=True).cuda()
             q = Variable(q, volatile=True).cuda()
-            pred = model(v, b, q, None)
+            pred = model(v, b, q, None, 'vqa')
             batch_score, logits = compute_score_with_logits(pred, a.cuda())
             batch_score = batch_score.sum()
             score += batch_score
@@ -162,7 +160,9 @@ def eval(model, dataloader, task='vqa'):
         return score, upper_bound
 
     elif task == 'ref':
-        for v, b, q, a, image_id, annotation_id, refexp_id in iter(dataloader):
+        for i, (v, b, feats) in enumerate(dataloader):
+            q = feats['refexp']
+            a = feats['gold_box']
             if torch.cuda.is_available():
                 v = Variable(v, volatile=True).cuda()
                 b = Variable(b, volatile=True).cuda()
@@ -172,7 +172,7 @@ def eval(model, dataloader, task='vqa'):
                 v = Variable(v, volatile=True)
                 b = Variable(b, volatile=True)
                 q = Variable(q, volatile=True)
-            pred = model(v, b, q, None)
+            pred = model(v, b, q, None, 'ref')
 
             pred = pred.squeeze(-1)
             a = a.squeeze(-1)
@@ -196,7 +196,7 @@ def evaluate(model, dataloader, task='vqa'):
             v = Variable(v, volatile=True).cuda()
             b = Variable(b, volatile=True).cuda()
             q = Variable(q, volatile=True).cuda()
-            pred = model(v, b, q, None)
+            pred = model(v, b, q, None, 'vqa')
             batch_score, predicted_logits = compute_score_with_logits(pred, a.cuda())
             batch_score = batch_score.sum()
             score += batch_score
@@ -223,7 +223,7 @@ def evaluate(model, dataloader, task='vqa'):
                 v = Variable(v, volatile=True)
                 b = Variable(b, volatile=True)
                 q = Variable(q, volatile=True)
-            pred = model(v, b, q, None)
+            pred = model(v, b, q, None, 'ref')
 
             pred = pred.squeeze(-1)
             a = a.squeeze(-1)
