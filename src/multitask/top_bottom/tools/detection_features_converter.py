@@ -30,13 +30,14 @@ csv.field_size_limit(sys.maxsize)
 ## TODO : Additional field 'gold_box'
 FIELDNAMES = ['image_id', 'image_w', 'image_h', 'num_boxes', 'boxes', 'features']
 data_root = sys.argv[1]
-infile = os.path.join(data_root, 'full_2014.tsv')
+#infile = os.path.join(data_root, 'full_2014.tsv')
+infile = "/usr3/data/aschaudh/11777/baseline_data/11777/bottom-up-attention-vqa/data/trainval_36/trainval_resnet101_faster_rcnn_genome_36.tsv"
 train_data_file = os.path.join(data_root, 'train36.hdf5')
 val_data_file = os.path.join(data_root, 'val36.hdf5')
-train_indices_file = os.path.join(data_root, 'train36_imgid2idx.pkl')
-val_indices_file = os.path.join(data_root, 'val36_imgid2idx.pkl')
-train_ids_file = os.path.join(data_root, 'train_ids.pkl')
-val_ids_file = os.path.join(data_root, 'val_ids.pkl')
+train_indices_file = os.path.join(data_root, 'ref_train36_imgid2idx.pkl')
+val_indices_file = os.path.join(data_root, 'ref_val36_imgid2idx.pkl')
+train_ids_file = os.path.join(data_root, 'ref_train_ids.pkl')
+val_ids_file = os.path.join(data_root, 'ref_val_ids.pkl')
 
 feature_length = 2048
 num_fixed_boxes = 36
@@ -54,8 +55,8 @@ if __name__ == '__main__':
         #val_imgids = utils.load_imageid(os.path.join(data_root, 'google_refexp_val_201511_coco_aligned_and_labeled_filtered.json'))
         #vqa_train_imgids = [458752, 458752, 458752, 458752, 262146]
         #vqa_val_imgids = [262148, 262148, 262148, 393225, 393225]
-        train_imgids = [287140, 370252, 19399, 581605, 452892]
-        val_imgids = [114786, 283431, 499274, 569987, 190805]
+        #train_imgids = [287140, 370252, 19399, 581605, 452892]
+        #val_imgids = [114786, 283431, 499274, 569987, 190805]
 
         cPickle.dump(train_imgids, open(train_ids_file, 'wb'))
         cPickle.dump(val_imgids, open(val_ids_file, 'wb'))
@@ -76,6 +77,7 @@ if __name__ == '__main__':
             elif int(item['image_id']) in val_imgids:
                 images_in_val_tsv_count += 1
                 tsv_val_img_ids.append(int(item['image_id']))
+    '''
     train_img_features = h_train.create_dataset(
         'image_features', (images_in_train_tsv_count, num_fixed_boxes, feature_length), 'f')
     train_img_bb = h_train.create_dataset(
@@ -89,6 +91,7 @@ if __name__ == '__main__':
         'image_features', (images_in_val_tsv_count, num_fixed_boxes, feature_length), 'f')
     val_spatial_img_features = h_val.create_dataset(
         'spatial_features', (images_in_val_tsv_count, num_fixed_boxes, 6), 'f')
+    '''
 
     train_counter = 0
     val_counter = 0

@@ -104,8 +104,11 @@ def _load_dataset(task, dataroot, name, img_id2val):
             dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled_filtered.json' % name)
 
     '''DEBUG'''
-    train_image_ids = [458752, 458752, 458752, 458752, 262146]
-    val_image_ids = [262148, 262148, 262148, 393225, 393225]
+    #vqa_train_image_ids = [458752, 458752, 458752, 458752, 262146]
+    #vqa_val_image_ids = [262148, 262148, 262148, 393225, 393225]
+
+    #train_image_ids = [287140, 370252, 19399, 581605, 452892]
+    #val_image_ids = [114786, 283431, 499274, 569987, 190805]
 
     #VQA
     vqa_entries = []
@@ -138,17 +141,18 @@ def _load_dataset(task, dataroot, name, img_id2val):
     #REF
     ref_entries = []
     if task == "ref" or task == "ref_vqa":
+        print(name, refex_path)
         data = json.load(open(refex_path))
         refexps = data['refexps']
         annotations = data['annotations']
 
         for annotation_id in annotations:
             image_id = annotations[annotation_id]['image_id']
-            if name == "train" and int(image_id) not in train_image_ids:
-                continue
+            #if name == "train" and int(image_id) not in train_image_ids:
+            #    continue
 
-            if name == "val" or name == "val_heldout" and int(image_id) not in val_image_ids:
-                continue
+            #if name == "val" or name == "val_heldout" and int(image_id) not in val_image_ids:
+            #    continue
 
             annotation_id_ = int(annotation_id)
             gold_box = annotations[annotation_id]['labels'].index(1)
@@ -187,17 +191,21 @@ class FeatureDataset(Dataset):
             open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % ('train' if name == 'val_heldout' else name))))
 
         print('loading features from h5 file')
-        h5_path = os.path.join(dataroot, '%s36.hdf5' % ('train' if name == 'val_heldout' else name))
-        with h5py.File(h5_path, 'r') as hf:
-            self.features = np.array(hf.get('image_features'))
-            self.spatials = np.array(hf.get('spatial_features'))
+        #h5_path = os.path.join(dataroot, '%s36.hdf5' % ('train' if name == 'val_heldout' else name))
+        #with h5py.File(h5_path, 'r') as hf:
+        #    self.features = np.array(hf.get('image_features'))
+        #    self.spatials = np.array(hf.get('spatial_features'))
 
         self.vqa_entries, self.ref_entries = _load_dataset(task,dataroot, name, self.img_id2idx)
-
-        self.tokenize()
-        self.tensorize()
-        self.v_dim = self.features.size(2)
-        self.s_dim = self.spatials.size(2)
+        
+        #self.tokenize()
+        #self.tensorize()
+        #self.v_dim = self.features.size(2)
+        #self.s_dim = self.spatials.size(2)
+	self.features = None
+	self.spatials = None
+	self.v_dim = 200
+	self.s_dim = 200
 	print('v dim', self.v_dim, 's dim', self.s_dim)
 
     def tokenize(self, max_length=14):
