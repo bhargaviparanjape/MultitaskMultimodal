@@ -65,7 +65,6 @@ if __name__ == '__main__':
     else:
         print("ERROR: Give valid combination!")
 
-    exit(-1)
 
     if torch.cuda.is_available():
         print('running model on CUDA')
@@ -81,8 +80,8 @@ if __name__ == '__main__':
     eval_loaders = {'vqa': None, 'ref': None}
 
     if args.task == 'vqa':
-        train_loaders['vqa'] = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
-        eval_loaders['vqa'] =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=1)
+        train_loaders['vqa'] = DataLoader(train_dset, batch_size, shuffle=True, num_workers=4)
+        eval_loaders['vqa'] =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=4)
 
     elif args.task == 'ref':
 	train_loaders['ref'] = DataLoader(train_dset, batch_size, shuffle=True, num_workers=4)
@@ -91,10 +90,10 @@ if __name__ == '__main__':
 	print('eval_loader len', len(eval_loaders['ref'].dataset))
 
     else:
-        train_loaders['vqa'] = DataLoader(train_dset_vqa, batch_size, shuffle=True, num_workers=1)
-        eval_loaders['vqa'] = DataLoader(eval_dset_vqa, batch_size, shuffle=False, num_workers=1)
-        train_loaders['ref'] = DataLoader(train_dset_ref, batch_size, shuffle=True, num_workers=1)
-        eval_loaders['ref'] = DataLoader(eval_dset_ref, batch_size, shuffle=False, num_workers=1)
+        train_loaders['vqa'] = DataLoader(train_dset_vqa, batch_size, shuffle=True, num_workers=4)
+        eval_loaders['vqa'] = DataLoader(eval_dset_vqa, batch_size, shuffle=False, num_workers=4)
+        train_loaders['ref'] = DataLoader(train_dset_ref, batch_size, shuffle=True, num_workers=4)
+        eval_loaders['ref'] = DataLoader(eval_dset_ref, batch_size, shuffle=False, num_workers=4)
 
     if args.mode == "train":
         train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output)

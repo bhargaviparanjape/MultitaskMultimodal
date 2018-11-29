@@ -107,9 +107,6 @@ def _load_dataset(task, dataroot, name, img_id2val):
     #vqa_train_image_ids = [458752, 458752, 458752, 458752, 262146]
     #vqa_val_image_ids = [262148, 262148, 262148, 393225, 393225]
 
-    #train_image_ids = [287140, 370252, 19399, 581605, 452892]
-    #val_image_ids = [114786, 283431, 499274, 569987, 190805]
-
     #VQA
     vqa_entries = []
     if task == "vqa" or task == "ref_vqa":
@@ -139,9 +136,11 @@ def _load_dataset(task, dataroot, name, img_id2val):
         print("Loaded VQA : {0}".format(len(vqa_entries)))
 
     #REF
+    #train_image_ids = [287140, 370252, 19399, 581605, 452892]
+    #val_image_ids = [114786, 283431, 499274, 569987, 190805]
+
     ref_entries = []
     if task == "ref" or task == "ref_vqa":
-        print(name, refex_path)
         data = json.load(open(refex_path))
         refexps = data['refexps']
         annotations = data['annotations']
@@ -187,26 +186,32 @@ class FeatureDataset(Dataset):
             self.num_ans_candidates = len(self.ans2label)
 
         self.dictionary = dictionary
-        self.img_id2idx = cPickle.load(
-            open(os.path.join(dataroot, '%s36_imgid2idx.pkl' % ('train' if name == 'val_heldout' else name))))
+	if task == 'vqa':
+	   self.img_id2idx = cPickle.load(
+		open(os.path.join(dataroot, 'vqa_%s36_imgid2idx.pkl' % ('train' if name == 'val_heldout' else name))))
+	if task == 'ref':
+            self.img_id2idx = cPickle.load(
+                open(os.path.join(dataroot, 'ref_%s36_imgid2idx.pkl' % ('train' if name == 'val_heldout' else name))))
 
         print('loading features from h5 file')
-        #h5_path = os.path.join(dataroot, '%s36.hdf5' % ('train' if name == 'val_heldout' else name))
-        #with h5py.File(h5_path, 'r') as hf:
-        #    self.features = np.array(hf.get('image_features'))
-        #    self.spatials = np.array(hf.get('spatial_features'))
+        h5_path = os.path.join(dataroot, '%s36.hdf5' % ('train' if name == 'val_heldout' else name))
+        with h5py.File(h5_path, 'r') as hf:
+            self.features = np.array(hf.get('image_features'))
+            self.spatials = np.array(hf.get('spatial_features'))
 
         self.vqa_entries, self.ref_entries = _load_dataset(task,dataroot, name, self.img_id2idx)
         
-        #self.tokenize()
-        #self.tensorize()
-        #self.v_dim = self.features.size(2)
-        #self.s_dim = self.spatials.size(2)
+        self.tokenize()
+        self.tensorize()
+        self.v_dim = self.features.size(2)
+        self.s_dim = self.spatials.size(2)
+	'''
 	self.features = None
 	self.spatials = None
 	self.v_dim = 200
 	self.s_dim = 200
 	print('v dim', self.v_dim, 's dim', self.s_dim)
+	'''
 
     def tokenize(self, max_length=14):
         """Tokenizes the questions.

@@ -37,7 +37,8 @@ def train(task, model, train_loaders, eval_loaders, num_epochs, output):
     utils.create_dir(output)
     optim = torch.optim.Adamax(model.parameters())
     logger = utils.Logger(os.path.join(output, 'log.txt'))
-    best_eval_score = 0
+    best_eval_vqa_score = 0
+    best_eval_ref_score = 0
 
     for epoch in range(num_epochs):
         total_loss = 0
@@ -76,14 +77,18 @@ def train(task, model, train_loaders, eval_loaders, num_epochs, output):
             total_loss /= len(train_loader.dataset)
             train_score = 100 * train_score / len(train_loader.dataset)
             model.train(False)
-            eval_score, bound = eval(model, eval_loader, 'vqa')
+            eval_vqa_score, bound = eval(model, eval_loader, 'vqa')
             model.train(True)
 
-            if eval_score > best_eval_score:
+            if eval_vqa_score > best_eval_vqa_score:
                 logger.write('Saving model for VQA')
                 model_path = os.path.join(output, 'model_vqa.pth')
                 torch.save(model.state_dict(), model_path)
-                best_eval_score = eval_score
+                best_eval_vqa_score = eval_vqa_score
+
+	    logger.write('epoch %d, time: %.2f' % (epoch, time.time()-t))
+	    logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
+	    logger.write('\teval score: %.2f' % eval_vqa_score)
 
         # Refexp training loop
         else:
@@ -124,24 +129,18 @@ def train(task, model, train_loaders, eval_loaders, num_epochs, output):
             total_loss /= len(train_loader.dataset)
             train_score = 100 * train_score / len(train_loader.dataset)
             model.train(False)
-            eval_score = eval(model, eval_loader, 'ref')
+            eval_ref_score = eval(model, eval_loader, 'ref')
             model.train(True)
 
-            if eval_score > best_eval_score:
+            if eval_ref_score > best_eval_ref_score:
                 logger.write('Saving model for RefExp')
                 model_path = os.path.join(output, 'model_refexp_best.pth')
                 torch.save(model.state_dict(), model_path)
-                best_eval_score = eval_score
+                best_eval_ref_score = eval_ref_score
 
-        logger.write('epoch %d, time: %.2f' % (epoch, time.time()-t))
-        logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
-        logger.write('\teval score: %.2f' % eval_score)
-
-        if eval_score > best_eval_score:
-            model_path = os.path.join(output, 'model_multi_best.pth')
-            torch.save(model.state_dict(), model_path)
-            best_eval_score = eval_score
-
+	    logger.write('epoch %d, time: %.2f' % (epoch, time.time()-t))
+	    logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
+	    logger.write('\teval score: %.2f' % eval_ref_score)
 
 def eval(model, dataloader, task='vqa'):
     score = 0
