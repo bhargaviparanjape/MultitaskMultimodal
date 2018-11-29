@@ -59,10 +59,13 @@ if __name__ == '__main__':
     elif args.task == "ref":
         train_dset =  FeatureDataset(args.task,'train', dictionary, data_root)
         eval_dset = FeatureDataset(args.task,'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
+	#eval_dset = FeatureDataset(args.task,'train', dictionary, data_root)
         model = getattr(base_model, constructor)(args.task, train_dset, args.num_hid)
 
     else:
         print("ERROR: Give valid combination!")
+
+    exit(-1)
 
     if torch.cuda.is_available():
         print('running model on CUDA')
