@@ -84,7 +84,7 @@ def _create_entry(img=None, question=None, answer=None,annotation_id=None, refex
     return entry
 
 
-def _load_dataset(task, dataroot, name, img_id2val):
+def _load_dataset(task, dataroot, name, img_id2val, run_as):
     """Load entries
 
     img_id2val: dict {img_id -> val} val can be used to retrieve image or features
@@ -104,8 +104,9 @@ def _load_dataset(task, dataroot, name, img_id2val):
             dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled_filtered.json' % name)
 
     '''DEBUG'''
-    #vqa_train_image_ids = [458752, 458752, 458752, 458752, 262146]
-    #vqa_val_image_ids = [262148, 262148, 262148, 393225, 393225]
+    if run_as == 'debug':
+       vqa_train_image_ids = [458752, 458752, 458752, 458752, 262146]
+       vqa_val_image_ids = [262148, 262148, 262148, 393225, 393225]
 
     #VQA
     vqa_entries = []
@@ -136,8 +137,9 @@ def _load_dataset(task, dataroot, name, img_id2val):
         print("Loaded VQA : {0}".format(len(vqa_entries)))
 
     #REF
-    #train_image_ids = [287140, 370252, 19399, 581605, 452892]
-    #val_image_ids = [114786, 283431, 499274, 569987, 190805]
+    if run_as == 'debug':
+        train_image_ids = [287140, 370252, 19399, 581605, 452892]
+        val_image_ids = [114786, 283431, 499274, 569987, 190805]
 
     ref_entries = []
     if task == "ref" or task == "ref_vqa":
@@ -147,11 +149,11 @@ def _load_dataset(task, dataroot, name, img_id2val):
 
         for annotation_id in annotations:
             image_id = annotations[annotation_id]['image_id']
-            #if name == "train" and int(image_id) not in train_image_ids:
-            #    continue
+            if run_as == 'debug' and name == "train" and int(image_id) not in train_image_ids:
+                continue
 
-            #if name == "val" or name == "val_heldout" and int(image_id) not in val_image_ids:
-            #    continue
+            if run_as == 'debug' and (name == "val" or name == "val_heldout" and int(image_id) not in val_image_ids):
+                continue
 
             annotation_id_ = int(annotation_id)
             gold_box = annotations[annotation_id]['labels'].index(1)
@@ -171,7 +173,7 @@ def _load_dataset(task, dataroot, name, img_id2val):
 
 
 class FeatureDataset(Dataset):
-    def __init__(self,task, name, dictionary, dataroot='data',):
+    def __init__(self,task, name, dictionary, dataroot='data',run_as='normal'):
         super(FeatureDataset, self).__init__()
         assert name in ['train', 'val','val_heldout']
         self.task = task
@@ -200,7 +202,7 @@ class FeatureDataset(Dataset):
             self.features = np.array(hf.get('image_features'))
             self.spatials = np.array(hf.get('spatial_features'))
 
-        self.vqa_entries, self.ref_entries = _load_dataset(task,dataroot, name, self.img_id2idx)
+        self.vqa_entries, self.ref_entries = _load_dataset(task,dataroot, name, self.img_id2idx, run_as)
         
         self.tokenize()
         self.tensorize()

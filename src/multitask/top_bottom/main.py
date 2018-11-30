@@ -29,6 +29,7 @@ def parse_args():
     parser.add_argument('--task', choices=["vqa", "ref", "ref_vqa"], type=str)
     parser.add_argument('--mt_mode', choices=['multiplex', 'sequential'], default='sequential')
     parser.add_argument("--dictionary", type=str)
+    parser.add_argument("--run_as", type=str, default='normal', choices=['normal', 'debug'])
     args = parser.parse_args()
     return args
 
@@ -47,20 +48,21 @@ if __name__ == '__main__':
     dictionary = Dictionary.load_from_file(args.dictionary)  #TODO: Combine all the dictionary.pkl BEFORE!
 
     if args.task == "ref_vqa":
-        train_dset_vqa = FeatureDataset("vqa",'train', dictionary,data_root)
-        eval_dset_vqa = FeatureDataset("vqa",'val', dictionary,data_root)
-        train_dset_ref = FeatureDataset("ref",'train', dictionary, data_root)
-        eval_dset_ref = FeatureDataset("ref",'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
+        train_dset_vqa = FeatureDataset("vqa",'train', dictionary,data_root, args.run_as)
+        eval_dset_vqa = FeatureDataset("vqa",'val', dictionary,data_root, args.run_as)
+        train_dset_ref = FeatureDataset("ref",'train', dictionary, data_root, args.run_as)
+        #eval_dset_ref = FeatureDataset("ref",'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
+	eval_dset_ref = FeatureDataset("ref", 'train', dictionary, data_root, args.run_as)
         model = getattr(base_model, constructor)(args.task, train_dset_vqa, args.num_hid)
 
     elif args.task == "vqa":
-        train_dset = FeatureDataset(args.task,'train', dictionary,data_root)
-        eval_dset =  FeatureDataset(args.task,'val', dictionary,data_root)
+        train_dset = FeatureDataset(args.task,'train', dictionary,data_root, args.run_as)
+        eval_dset =  FeatureDataset(args.task,'val', dictionary,data_root, args.run_as)
         model = getattr(base_model, constructor)(args.task, train_dset, args.num_hid)
 
     elif args.task == "ref":
-        train_dset =  FeatureDataset(args.task,'train', dictionary, data_root)
-        eval_dset = FeatureDataset(args.task,'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
+        train_dset =  FeatureDataset(args.task,'train', dictionary, data_root, args.run_as)
+        eval_dset = FeatureDataset(args.task,'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root, args.run_as)
 	#eval_dset = FeatureDataset(args.task,'train', dictionary, data_root)
         model = getattr(base_model, constructor)(args.task, train_dset, args.num_hid)
 
@@ -74,7 +76,7 @@ if __name__ == '__main__':
     #model = getattr(base_model, constructor)(train_dset, args.num_hid)
     model.w_emb.init_embedding(os.path.join(data_root, 'glove_6b_common_300d.npy'))
     
-    if torch.cuda.is_available():
+    if args.run_as == 'normal' and torch.cuda.is_available():
         model = nn.DataParallel(model).cuda()
 
     # task-specific data loaders
@@ -88,8 +90,6 @@ if __name__ == '__main__':
     elif args.task == 'ref':
 	train_loaders['ref'] = DataLoader(train_dset, batch_size, shuffle=True, num_workers=4)
 	eval_loaders['ref'] =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=4)
-	print('train_laoder len', len(train_loaders['ref'].dataset))
-	print('eval_loader len', len(eval_loaders['ref'].dataset))
 
     else:
         train_loaders['vqa'] = DataLoader(train_dset_vqa, batch_size, shuffle=True, num_workers=4)
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         if args.mt_mode == 'sequential':
             train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output)
         else:
-            multitask_train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output)
+            multitask_train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output, args.run_as)
 
     else:
         checkpoint = torch.load(args.model_file)

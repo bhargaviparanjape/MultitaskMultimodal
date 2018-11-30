@@ -108,20 +108,23 @@ def get_next_batch(data_iter, count):
     try:
         next_batch = next(data_iter)
     except StopIteration:
-        print('completed', count, 'examples')
+        #print('completed', count, 'examples')
         pass
     return next_batch
 
 
-def multitask_train(task, model, train_loaders, eval_loaders, num_epochs, output):
+def multitask_train(task, model, train_loaders, eval_loaders, num_epochs, output, run_as):
     utils.create_dir(output)
     optim = torch.optim.Adamax(model.parameters())
     logger = utils.Logger(os.path.join(output, 'log.txt'))
     best_eval_vqa_score = 0
     best_eval_ref_score = 0
-    # TODO: update VQA and ref actual example numbers
-    total_train_vqa = 5000
-    total_train_ref = 5000
+    # debug total # examples
+    if run_as == 'debug':
+        total_train_vqa, total_train_ref = 7, 19
+    else:
+        total_train_vqa = 443283
+        total_train_ref = 85140
 
     for epoch in range(num_epochs):
         total_vqa_loss, total_ref_loss = 0, 0
@@ -134,6 +137,7 @@ def multitask_train(task, model, train_loaders, eval_loaders, num_epochs, output
         vqa_eval_loader = eval_loaders['vqa']
         ref_train_loader = train_loaders['ref']
         ref_eval_loader = eval_loaders['ref']
+	print(ref_eval_loader.dataset)
 
         vqa_train_iter = iter(vqa_train_loader)
         ref_train_iter = iter(ref_train_loader)
@@ -141,31 +145,39 @@ def multitask_train(task, model, train_loaders, eval_loaders, num_epochs, output
         while count_train_ref < total_train_ref and count_train_vqa < total_train_vqa:
             sampler = random.uniform(0, 1)
             if sampler < 0.5:
-                logger.write('epoch %d : VQA Training' % epoch)
+                #logger.write('epoch %d : VQA Training' % epoch)
                 batch = get_next_batch(vqa_train_iter, count_train_vqa)
+		if not batch:
+		    break
                 total_vqa_loss, train_vqa_score = train_step(batch, model, optim, total_vqa_loss, train_vqa_score,
                                                              vqa_train_loader, 'vqa')
-                count_train_vqa += 1
+                count_train_vqa += len(batch[0])
             else:
-                logger.write('epoch %d : RefExp Training' % epoch)
+                #logger.write('epoch %d : RefExp Training' % epoch)
                 batch = get_next_batch(ref_train_iter, count_train_ref)
+		if not batch:
+		    break
                 total_ref_loss, train_ref_score = train_step(batch, model, optim, total_ref_loss, train_ref_score,
                                                              ref_train_loader, 'ref')
-                count_train_ref += 1
+                count_train_ref += len(batch[0])
 
         while count_train_vqa < total_train_vqa:
-            logger.write('epoch %d : VQA Training' % epoch)
+            #logger.write('epoch %d : VQA Training' % epoch)
             batch = get_next_batch(vqa_train_iter, count_train_vqa)
+	    if not batch:
+	        break
             total_vqa_loss, train_vqa_score = train_step(batch, model, optim, total_vqa_loss, train_vqa_score,
                                                          vqa_train_loader, 'vqa')
-            count_train_vqa += 1
+            count_train_vqa += len(batch[0])
 
         while count_train_ref < total_train_ref:
-            logger.write('epoch %d : RefExp Training' % epoch)
+            #logger.write('epoch %d : RefExp Training' % epoch)
             batch = get_next_batch(ref_train_iter, count_train_ref)
+	    if not batch:
+	        break
             total_ref_loss, train_ref_score = train_step(batch, model, optim, total_ref_loss, train_ref_score,
                                                          ref_train_loader, 'ref')
-            count_train_ref += 1
+            count_train_ref += len(batch[0])
 
         model.train(False)
         eval_vqa_score, _ = eval(model, vqa_eval_loader, 'vqa')
