@@ -102,7 +102,6 @@ def _load_dataset(task, dataroot, name, img_id2val):
             dataroot, 'v2_OpenEnded_mscoco_%s2014_questions_filtered.json' % name)
         refex_path = os.path.join(
             dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled_filtered.json' % name)
-            dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled_filtered.json' % name)
 
     '''DEBUG'''
     #vqa_train_image_ids = [458752, 458752, 458752, 458752, 262146]
@@ -187,11 +186,11 @@ class FeatureDataset(Dataset):
             self.num_ans_candidates = len(self.ans2label)
 
         self.dictionary = dictionary
-    print('loading features from h5 file')
+        print('loading features from h5 file')
 	if task == 'vqa':
 	   self.img_id2idx = cPickle.load(
 		open(os.path.join(dataroot, 'vqa_%s36_imgid2idx.pkl' % ('train' if name == 'val_heldout' else name))))
-       h5_path = os.path.join(dataroot, '%s36.hdf5' % ('train' if name == 'val_heldout' else name))
+           h5_path = os.path.join(dataroot, '%s36.hdf5' % ('train' if name == 'val_heldout' else name))
 	if task == 'ref':
             self.img_id2idx = cPickle.load(
                 open(os.path.join(dataroot, 'ref2_%s36_imgid2idx.pkl' % ('train' if name == 'val_heldout' else name))))
