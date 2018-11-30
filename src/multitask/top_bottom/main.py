@@ -7,6 +7,7 @@ import numpy as np
 from dataset import Dictionary, FeatureDataset
 import base_model
 from train import train, evaluate
+from train_mutliplex import multitask_train
 import utils
 import pdb
 import sys,os
@@ -26,6 +27,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     parser.add_argument('--task', choices=["vqa", "ref", "ref_vqa"], type=str)
+    parser.add_argument('--mt-mode', choices=['multiplex', 'sequential'], default='sequential')
     parser.add_argument("--dictionary", type=str)
     args = parser.parse_args()
     return args
@@ -96,7 +98,11 @@ if __name__ == '__main__':
         eval_loaders['ref'] = DataLoader(eval_dset_ref, batch_size, shuffle=False, num_workers=4)
 
     if args.mode == "train":
-        train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output)
+        if args.mt_mode == 'sequential':
+            train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output)
+        else:
+            multitask_train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output)
+
     else:
         checkpoint = torch.load(args.model_file)
         model.load_state_dict(checkpoint)
