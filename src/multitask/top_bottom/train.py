@@ -33,9 +33,9 @@ def compute_score_with_logits(logits, labels):
     return (logits == labels).sum(), logits
 
 
-def train(task, model, train_loaders, eval_loaders, num_epochs, output):
+def train(task, model, train_loaders, eval_loaders, num_epochs, output, learning_rate=2e-3):
     utils.create_dir(output)
-    optim = torch.optim.Adamax(model.parameters())
+    optim = torch.optim.Adamax(model.parameters(), lr=learning_rate)
     logger = utils.Logger(os.path.join(output, 'log.txt'))
     best_eval_vqa_score = 0
     best_eval_ref_score = 0

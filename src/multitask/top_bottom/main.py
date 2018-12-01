@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--num_hid', type=int, default=1024)
     parser.add_argument('--model', type=str, default='multitask')
     parser.add_argument('--output', type=str, default='saved_models/exp2')
-    parser.add_argument('--mode', type=str, default="train", help='train, eval_heldout')
+    parser.add_argument('--mode', type=str, default="train", help='train, eval_heldout, vqa2ref, ref2vqa')
     parser.add_argument('--analysis_file', type=str, default="saved_models/analysis_exp1.json")
     parser.add_argument('--model_file', type=str, default="saved_models/model_multi_best.pth")
     parser.add_argument('--batch_size', type=int, default=512)
@@ -30,6 +30,7 @@ def parse_args():
     parser.add_argument('--mt_mode', choices=['multiplex', 'sequential'], default='sequential')
     parser.add_argument("--dictionary", type=str)
     parser.add_argument("--run_as", type=str, default='normal', choices=['normal', 'debug'])
+    parser.add_argument('--learning_rate', type=int, default=2e-3)
     args = parser.parse_args()
     return args
 
@@ -45,7 +46,7 @@ if __name__ == '__main__':
     batch_size = args.batch_size
     constructor = 'build_%s' % args.model
 
-    dictionary = Dictionary.load_from_file(args.dictionary)  #TODO: Combine all the dictionary.pkl BEFORE!
+    dictionary = Dictionary.load_from_file(args.dictionary)
 
     if args.task == "ref_vqa":
         train_dset_vqa = FeatureDataset("vqa",'train', dictionary,data_root, args.run_as)
@@ -102,6 +103,11 @@ if __name__ == '__main__':
             train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output)
         else:
             multitask_train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output, args.run_as)
+
+    elif args.mode == 'vqa2ref' or 'ref2vqa':
+        checkpoint = torch.load(args.model_file)
+        model.load_state_dict(checkpoint)
+        train(args.task, model, train_loaders, eval_loaders, args.epochs, args.output)
 
     else:
         checkpoint = torch.load(args.model_file)
