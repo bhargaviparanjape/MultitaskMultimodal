@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import utils
 from torch.autograd import Variable
-import pdb
 
 random.seed(123)
 
@@ -64,8 +63,6 @@ def train_step(batch, model, optim, total_loss, train_score, train_loader, task)
     else:
         total_loss, train_score = ref_train(batch, model, optim, total_loss, train_score)
 
-    total_loss /= len(train_loader.dataset)
-    train_score = 100 * train_score / len(train_loader.dataset)
     return total_loss, train_score
 
 
@@ -108,7 +105,6 @@ def get_next_batch(data_iter, count):
     try:
         next_batch = next(data_iter)
     except StopIteration:
-        #print('completed', count, 'examples')
         pass
     return next_batch
 
@@ -137,8 +133,7 @@ def multitask_train(task, model, train_loaders, eval_loaders, num_epochs, output
         vqa_eval_loader = eval_loaders['vqa']
         ref_train_loader = train_loaders['ref']
         ref_eval_loader = eval_loaders['ref']
-	print(ref_eval_loader.dataset)
-
+	
         vqa_train_iter = iter(vqa_train_loader)
         ref_train_iter = iter(ref_train_loader)
 
@@ -179,9 +174,15 @@ def multitask_train(task, model, train_loaders, eval_loaders, num_epochs, output
                                                          ref_train_loader, 'ref')
             count_train_ref += len(batch[0])
 
+        total_vqa_loss /= len(vqa_train_loader.dataset)
+        train_vqa_score = 100 * train_vqa_score / len(vqa_train_loader.dataset)
+
+	total_ref_loss /= len(ref_train_loader.dataset)
+	train_ref_score = 100 * train_ref_score / len(ref_train_loader.dataset)
+
         model.train(False)
-        eval_vqa_score, _ = eval(model, vqa_eval_loader, 'vqa')
-        eval_ref_score, _ = eval(model, ref_eval_loader, 'ref')
+        _, eval_vqa_score = eval(model, vqa_eval_loader, 'vqa')
+        eval_ref_score = eval(model, ref_eval_loader, 'ref')
         model.train(True)
 
         logger.write('epoch %d, time: %.2f' % (epoch, time.time() - t))
@@ -227,6 +228,7 @@ def eval(model, dataloader, task='vqa'):
         return score, upper_bound
 
     elif task == 'ref':
+#	import pdb; pdb.set_trace()
         for i, (v, b, feats) in enumerate(dataloader):
             q = feats['refexp']
             a = feats['gold_box']
