@@ -192,14 +192,14 @@ def multitask_train(task, model, train_loaders, eval_loaders, num_epochs, output
         logger.write('\teval score: %.6f' % eval_ref_score)
 
         if eval_vqa_score > best_eval_vqa_score:
-            logger.write('Saving model for vqa')
             model_path = os.path.join(output, 'model_vqa.pth')
+            logger.write('Saving model for vqa %s' % model_path)
             torch.save(model.state_dict(), model_path)
             best_eval_vqa_score = eval_vqa_score
 
         if eval_ref_score > best_eval_ref_score:
-            logger.write('Saving model for ref')
             model_path = os.path.join(output, 'model_ref.pth')
+            logger.write('Saving model for ref %s ' % model_path)
             torch.save(model.state_dict(), model_path)
             best_eval_ref_score = eval_ref_score
 

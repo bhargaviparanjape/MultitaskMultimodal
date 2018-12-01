@@ -6,8 +6,11 @@ import numpy as np
 import utils
 import h5py
 import torch
+import random
 from torch.utils.data import Dataset
 import pdb
+
+random.seed(1)
 
 
 class Dictionary(object):
@@ -177,7 +180,7 @@ class FeatureDataset(Dataset):
         super(FeatureDataset, self).__init__()
         assert name in ['train', 'val','val_heldout']
         self.task = task
-	self.num_ans_candidates = 100
+	self.num_ans_candidates = 3129
 
         #VQA
         if task == "vqa" or task == 'ref_vqa':
@@ -203,6 +206,9 @@ class FeatureDataset(Dataset):
             self.spatials = np.array(hf.get('spatial_features'))
 
         self.vqa_entries, self.ref_entries = _load_dataset(task,dataroot, name, self.img_id2idx, run_as)
+	if (task == 'vqa' or task == 'ref_vqa') and run_as == 'low_resource':
+	    random.shuffle(self.vqa_entries)
+	    self.vqa_entries = self.vqa_entries[:85000]
         
         self.tokenize()
         self.tensorize()
