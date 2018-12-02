@@ -29,8 +29,9 @@ def parse_args():
     parser.add_argument('--task', choices=["vqa", "ref", "ref_vqa"], type=str)
     parser.add_argument('--mt_mode', choices=['multiplex', 'sequential'], default='sequential')
     parser.add_argument("--dictionary", type=str)
-    parser.add_argument("--run_as", type=str, default='normal', choices=['normal', 'debug'])
-    parser.add_argument('--learning_rate', type=int, default=2e-3)
+    parser.add_argument("--run_as", type=str, default='normal', choices=['normal', 'debug','low_resource'])
+    parser.add_argument('--learning_rate', type=float, default=2e-3)
+    parser.add_argument('--data_mode', type=str, default="train", help='train, eval_heldout')
     args = parser.parse_args()
     return args
 
@@ -52,8 +53,10 @@ if __name__ == '__main__':
         train_dset_vqa = FeatureDataset("vqa",'train', dictionary,data_root, args.run_as)
         eval_dset_vqa = FeatureDataset("vqa",'val', dictionary,data_root, args.run_as)
         train_dset_ref = FeatureDataset("ref",'train', dictionary, data_root, args.run_as)
-        #eval_dset_ref = FeatureDataset("ref",'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
-	eval_dset_ref = FeatureDataset("ref", 'train', dictionary, data_root, args.run_as)
+	if args.run_as == 'debug':
+	    eval_dset_ref = FeatureDataset("ref", 'train', dictionary, data_root, args.run_as)
+	else:
+            eval_dset_ref = FeatureDataset("ref",'val_heldout' if args.data_mode == "eval_heldout" else 'val', dictionary, data_root)
         model = getattr(base_model, constructor)(args.task, train_dset_vqa, args.num_hid)
 
     elif args.task == "vqa":
@@ -63,7 +66,10 @@ if __name__ == '__main__':
 
     elif args.task == "ref":
         train_dset =  FeatureDataset(args.task,'train', dictionary, data_root, args.run_as)
-        eval_dset = FeatureDataset(args.task,'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root, args.run_as)
+	if args.run_as == 'debug':
+	    eval_dset = FeatureDataset(args.task,'train', dictionary, data_root, args.run_as)
+	else:
+            eval_dset = FeatureDataset(args.task,'val_heldout' if args.data_mode == "eval_heldout" else 'val', dictionary, data_root, args.run_as)
 	#eval_dset = FeatureDataset(args.task,'train', dictionary, data_root)
         model = getattr(base_model, constructor)(args.task, train_dset, args.num_hid)
 
@@ -77,7 +83,7 @@ if __name__ == '__main__':
     #model = getattr(base_model, constructor)(train_dset, args.num_hid)
     model.w_emb.init_embedding(os.path.join(data_root, 'glove_6b_common_300d.npy'))
     
-    if args.run_as == 'normal' and torch.cuda.is_available():
+    if args.run_as != 'debug' and torch.cuda.is_available():
         model = nn.DataParallel(model).cuda()
 
     # task-specific data loaders
