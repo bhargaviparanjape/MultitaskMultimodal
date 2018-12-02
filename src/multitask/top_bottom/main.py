@@ -31,6 +31,7 @@ def parse_args():
     parser.add_argument("--dictionary", type=str)
     parser.add_argument("--run_as", type=str, default='normal', choices=['normal', 'debug','low_resource'])
     parser.add_argument('--learning_rate', type=float, default=2e-3)
+    parser.add_argument('--data_mode', type=str, default="train", help='train, eval_heldout')
     args = parser.parse_args()
     return args
 
@@ -55,7 +56,7 @@ if __name__ == '__main__':
 	if args.run_as == 'debug':
 	    eval_dset_ref = FeatureDataset("ref", 'train', dictionary, data_root, args.run_as)
 	else:
-            eval_dset_ref = FeatureDataset("ref",'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
+            eval_dset_ref = FeatureDataset("ref",'val_heldout' if args.data_mode == "eval_heldout" else 'val', dictionary, data_root)
         model = getattr(base_model, constructor)(args.task, train_dset_vqa, args.num_hid)
 
     elif args.task == "vqa":
@@ -68,7 +69,7 @@ if __name__ == '__main__':
 	if args.run_as == 'debug':
 	    eval_dset = FeatureDataset(args.task,'train', dictionary, data_root, args.run_as)
 	else:
-            eval_dset = FeatureDataset(args.task,'val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root, args.run_as)
+            eval_dset = FeatureDataset(args.task,'val_heldout' if args.data_mode == "eval_heldout" else 'val', dictionary, data_root, args.run_as)
 	#eval_dset = FeatureDataset(args.task,'train', dictionary, data_root)
         model = getattr(base_model, constructor)(args.task, train_dset, args.num_hid)
 
