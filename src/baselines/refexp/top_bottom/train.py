@@ -79,7 +79,7 @@ def train(model, train_loader, eval_loader, num_epochs, output, eval_compreh, la
         train_score = 0
         t = time.time()
 
-        for i, (v, b, q, a, image_id, annotation_id, refexp_id) in enumerate(train_loader):
+        for i, (v, b, q, a, image_id, annotation_id, refexp_id, iou_scores) in enumerate(train_loader):
             if torch.cuda.is_available():
                 v = Variable(v).cuda()
                 b = Variable(b).cuda()
@@ -128,7 +128,7 @@ def train(model, train_loader, eval_loader, num_epochs, output, eval_compreh, la
 def eval(model, dataloader):
     score = 0
     num_data = 0
-    for v, b, q, a, image_id, annotation_id, refexp_id in iter(dataloader):
+    for v, b, q, a, image_id, annotation_id, refexp_id, _ in iter(dataloader):
         if torch.cuda.is_available():
             v = Variable(v, volatile=True).cuda()
             b = Variable(b, volatile=True).cuda()
@@ -156,7 +156,7 @@ def evaluate(model, dataloader):
     upper_bound = 0
     num_data = 0
     result_log = []
-    for v, b, q, a, image_id, annotation_id, refexp_id in iter(dataloader):
+    for v, b, q, a, image_id, annotation_id, refexp_id, iou_scores in iter(dataloader):
         q_vector = q
         if torch.cuda.is_available():
             v = Variable(v, volatile=True).cuda()

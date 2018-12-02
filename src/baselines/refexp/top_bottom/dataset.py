@@ -60,14 +60,16 @@ class Dictionary(object):
     def __len__(self):
         return len(self.idx2word)
 
-def _create_entry(img, image_id, annotation_id, refexp, gold_box):
+def _create_entry(img, image_id, annotation_id, refexp, gold_box, iou_scores):
     entry = {
         'annotation_id' : annotation_id,
         'refexp_id' : refexp['refexp_id'],
         'image_id' : image_id,
         'image' : img,
         'refexp' : refexp['raw'],
-        'gold_box' : gold_box}
+        'gold_box' : gold_box,
+        'iou_scores': iou_scores
+    }
     return entry
 
 
@@ -96,6 +98,7 @@ def _load_dataset(dataroot, name, img_id2val):
         image_id = annotations[annotation_id]['image_id']
         annotation_id_ = int(annotation_id)
         gold_box = annotations[annotation_id]['labels'].index(1)
+        iou_scores = annotations[annotation_id]['iou_scores']
         #gold_box = np.random.randint(36)
         if image_id not in img_id2val:
             continue
@@ -103,7 +106,7 @@ def _load_dataset(dataroot, name, img_id2val):
         refexp_ids = annotations[annotation_id]['refexp_ids']
         for id_ in refexp_ids:
             refexp = refexps[str(id_)]
-            entries.append(_create_entry(img, image_id, annotation_id_, refexp, gold_box))
+            entries.append(_create_entry(img, image_id, annotation_id_, refexp, gold_box, iou_scores))
 
     return entries
 
@@ -160,6 +163,7 @@ class RefExpFeatureDataset(Dataset):
             refexp = torch.from_numpy(np.array(entry['r_token']))
             entry['r_token'] = refexp
             entry['gold_box'] = torch.LongTensor(1).fill_(entry['gold_box'])
+            entry['iou_scores'] = torch.from_numpy(np.array(entry['iou_scores']))
 
     def __getitem__(self, index):
         entry = self.entries[index]
@@ -172,7 +176,9 @@ class RefExpFeatureDataset(Dataset):
         refexp_id = entry['refexp_id']
         image_id = entry['image_id']
         annotation_id = entry['annotation_id']
-        return features, spatials, refexp, gold_box, image_id, annotation_id, refexp_id
+        iou_scores = entry['iou_scores']
+
+        return features, spatials, refexp, gold_box, image_id, annotation_id, refexp_id, iou_scores
 
     def __len__(self):
         return len(self.entries)
