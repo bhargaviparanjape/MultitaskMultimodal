@@ -33,7 +33,7 @@ class BaseRefexModel(nn.Module):
 
 class BaseRefexModelAttn(nn.Module):
     def __init__(self, w_emb, q_emb, v_att):
-        super(BaseRefexModel, self).__init__()
+        super(BaseRefexModelAttn, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
         self.v_att = v_att
