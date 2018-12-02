@@ -29,6 +29,7 @@ def parse_args():
     parser.add_argument('--mode', type=str, default="train")
     parser.add_argument('--analysis_file', type=str, default="saved_models/analysis_exp1.json")
     parser.add_argument('--model_file', type=str, default="saved_models/exp3/model.pth")
+    parser.add_argument('--loss_type', type=str, default="ce")
     parser.add_argument('--batch_size', type=int, default=512)
     parser.add_argument('--seed', type=int, default=1111, help='random seed')
     args = parser.parse_args()
@@ -72,7 +73,7 @@ if __name__ == '__main__':
     eval_loader =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=1)
     if args.mode == "train":
         eval_compreh, labeled_data = load_evaluation_refexp()
-        train(model, train_loader, eval_loader, args.epochs, args.output, eval_compreh, labeled_data)
+        train(model, train_loader, eval_loader, args.epochs, args.output, eval_compreh, labeled_data, args.loss_type)
     else:
         checkpoint = torch.load(args.model_file)
         model.load_state_dict(checkpoint)

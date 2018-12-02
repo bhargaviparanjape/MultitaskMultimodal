@@ -19,6 +19,13 @@ def cross_entropy(logits, labels):
     loss = nn.functional.cross_entropy(logits, labels)
     return loss
 
+def bce_loss(logits, iou_scores):
+    m = nn.Sigmoid()
+    targets = (iou_scores > 0.5).view(-1)
+    # targets = iou_scores
+    targets = targets.type(torch.FloatTensor)
+    loss = nn.BCELoss()
+    return loss(m(logits.view(-1)), targets)
 
 def compute_score_with_logits(logits, labels):
     logits = torch.max(logits, 1)[1].data #argmax
@@ -61,18 +68,18 @@ def refexp_evaluation_scores(eval_loader, model, eval_compreh, labeled_data):
     with os.fdopen(fd, 'w') as tmp:
         json.dump(predictions, tmp)
 
-    prec, _ = eval_compreh.evaluate(eval_path, thresh_k=1)
-    eval_compreh.evaluate(eval_path, thresh_k=2)
-    eval_compreh.evaluate(eval_path, thresh_k=3)
+    prec1, _ = eval_compreh.evaluate(eval_path, thresh_k=1)
+    prec2, _ = eval_compreh.evaluate(eval_path, thresh_k=2)
+    prec3, _ = eval_compreh.evaluate(eval_path, thresh_k=3)
     os.remove(predictions_file)
     os.remove(eval_path)
-    return prec
+    return prec1, prec2, prec3
 
-def train(model, train_loader, eval_loader, num_epochs, output, eval_compreh, labeled_data):
+def train(model, train_loader, eval_loader, num_epochs, output, eval_compreh, labeled_data, loss_type):
     utils.create_dir(output)
     optim = torch.optim.Adamax(model.parameters())
     logger = utils.Logger(os.path.join(output, 'log.txt'))
-    best_eval_score = 0
+    best_prec1, best_prec2, best_prec3 = 0, 0
 
     for epoch in range(num_epochs):
         total_loss = 0
@@ -85,19 +92,28 @@ def train(model, train_loader, eval_loader, num_epochs, output, eval_compreh, la
                 b = Variable(b).cuda()
                 q = Variable(q).cuda()
                 a = Variable(a).cuda()
+                iou_scores = Variable(iou_scores).cuda()
             else:
                 v = Variable(v)
                 b = Variable(b)
                 q = Variable(q)
                 a = Variable(a)
-
+                iou_scores = Variable(iou_scores)
 
             pred = model(v, b, q, a)
 
             pred = pred.squeeze(-1)
             a = a.squeeze(-1)
-            ## Cross Entropy Loss
-            loss = cross_entropy(pred, a)
+            iou_scores = iou_scores.squeeze(-1)
+
+            ## Loss
+            if loss_type == 'ce':
+                loss = cross_entropy(pred, a)
+            elif loss_type == 'bce':
+                loss = bce_loss(pred, iou_scores)
+            else:
+                raise('Unexpected loss type')
+
             loss.backward()
             nn.utils.clip_grad_norm(model.parameters(), 0.25)
             optim.step()
@@ -111,18 +127,19 @@ def train(model, train_loader, eval_loader, num_epochs, output, eval_compreh, la
         train_score = 100 * train_score / len(train_loader.dataset)
         model.train(False)
         eval_score = eval(model, eval_loader)
-        eval_score = refexp_evaluation_scores(eval_loader, model, eval_compreh, labeled_data)
+        prec1, prec2, prec3 = refexp_evaluation_scores(eval_loader, model, eval_compreh, labeled_data)
         model.train(True)
 
         logger.write('epoch %d, time: %.2f' % (epoch, time.time()-t))
         logger.write('\ttrain_loss: %.2f, score: %.2f' % (total_loss, train_score))
         logger.write('\teval score: %.2f' % eval_score)
+        logger.write('\tprec scores: %.2f, %.2f, %.2f' % (prec1, prec2, prec3))
 
-        if eval_score > best_eval_score:
+        if prec1 > best_prec1:
             model_path = os.path.join(output, 'model.pth')
             torch.save(model.state_dict(), model_path)
-            best_eval_score = eval_score
-        logger.write('\best teval score: %.2f' % best_eval_score)
+            best_prec1, best_prec2, best_prec3 = prec1, prec2, prec3
+        logger.write('\tbest prec scores: %.2f, %.2f, %.2f' % (best_prec1, best_prec2, best_prec3))
 
 
 def eval(model, dataloader):
