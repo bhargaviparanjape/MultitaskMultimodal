@@ -50,7 +50,9 @@ class NewAttention(nn.Module):
     def logits(self, v, q):
         batch, k, _ = v.size()
         v_proj = self.v_proj(v) # [batch, k, qdim]
-        q_proj = self.q_proj(q).unsqueeze(1).repeat(1, k, 1)
+        q_proj = self.q_proj(q)
+        if len(v_proj.shape) != len(q_proj.shape):
+            q_proj = q_proj.unsqueeze(1).repeat(1, k, 1)
         joint_repr = v_proj * q_proj
         joint_repr = self.dropout(joint_repr)
         logits = self.linear(joint_repr)
