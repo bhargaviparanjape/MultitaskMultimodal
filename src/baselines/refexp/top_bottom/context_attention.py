@@ -1,10 +1,11 @@
 import torch
 import torch.nn as nn
+from torch.nn.utils.weight_norm import weight_norm
 
 
 class ContextAttention(nn.Module):
 
-    def __init__(self, context_dim, query_dim, attention_type='general'):
+    def __init__(self, context_dim, query_dim, attention_type='general', dropout=0.2):
         super(ContextAttention, self).__init__()
 
         if attention_type not in ['dot', 'general']:
@@ -18,10 +19,14 @@ class ContextAttention(nn.Module):
 
         self.linear_out = nn.Linear(query_dim * 2, query_dim, bias=False)
         self.softmax = nn.Softmax(dim=-1)
+
+        self.dropout = nn.Dropout(dropout)
+        self.linear_final = weight_norm(nn.Linear(query_dim, 1), dim=None)
+
         self.tanh = nn.Tanh()
 
     def forward(self, query, context):
-        batch_size, output_len, dimensions = query.size()
+        batch_size, output_len, _ = query.size()
         query_len = context.size(1)
 
         if self.attention_type == "general":
@@ -49,6 +54,7 @@ class ContextAttention(nn.Module):
         # Apply linear_out on every 2nd dimension of concat
         # output -> (batch_size, output_len, dimensions)
         output = self.linear_out(combined).view(batch_size, output_len, self.query_dim)
-#         output = self.tanh(output)
+        output = self.tanh(output)
 
+        output = self.linear_final(self.dropout(output))
         return output, attention_weights
