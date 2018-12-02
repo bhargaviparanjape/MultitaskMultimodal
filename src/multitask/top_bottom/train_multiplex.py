@@ -181,7 +181,7 @@ def multitask_train(task, model, train_loaders, eval_loaders, num_epochs, output
 	train_ref_score = 100 * train_ref_score / len(ref_train_loader.dataset)
 
         model.train(False)
-        _, eval_vqa_score = eval(model, vqa_eval_loader, 'vqa')
+        eval_vqa_score, _ = eval(model, vqa_eval_loader, 'vqa')
         eval_ref_score = eval(model, ref_eval_loader, 'ref')
         model.train(True)
 
