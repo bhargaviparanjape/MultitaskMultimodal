@@ -20,8 +20,8 @@ class ContextAttention(nn.Module):
         self.linear_out = nn.Linear(query_dim * 2, query_dim, bias=False)
         self.softmax = nn.Softmax(dim=-1)
 
-        self.dropout = nn.Dropout(dropout)
-        self.linear_final = weight_norm(nn.Linear(query_dim, 1), dim=None)
+        # self.dropout = nn.Dropout(dropout)
+        # self.linear_final = weight_norm(nn.Linear(query_dim, 1), dim=None)
 
         self.tanh = nn.Tanh()
 
@@ -56,5 +56,5 @@ class ContextAttention(nn.Module):
         output = self.linear_out(combined).view(batch_size, output_len, self.query_dim)
         output = self.tanh(output)
 
-        output = self.linear_final(self.dropout(output))
+        # output = self.linear_final(self.dropout(output))
         return output, attention_weights

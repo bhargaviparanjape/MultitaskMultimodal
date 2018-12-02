@@ -32,10 +32,11 @@ class BaseRefexModel(nn.Module):
         return logits
 
 class BaseRefexModelAttn(nn.Module):
-    def __init__(self, w_emb, q_emb, v_att):
+    def __init__(self, w_emb, q_emb, cv_att, v_att):
         super(BaseRefexModelAttn, self).__init__()
         self.w_emb = w_emb
         self.q_emb = q_emb
+        self.cv_att = cv_att
         self.v_att = v_att
 
     def forward(self, v, b, q, labels):
@@ -49,9 +50,10 @@ class BaseRefexModelAttn(nn.Module):
         """
         w_emb = self.w_emb(q)
         q_emb = self.q_emb.forward_all(w_emb)
-        
         vs = torch.cat((v,b), dim=2)
-        logits, _ = self.v_att(vs, q_emb)
+        q_emb, _ = self.cv_att(vs, q_emb)
+        
+        logits = self.v_att(vs, q_emb)
         return logits
 
 def build_refex_baseline(dataset, num_hid, bidirectional):
@@ -64,5 +66,8 @@ def build_refex_baseline_attn(dataset, num_hid, bidirectional):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     bidirectional = True
     q_emb = QuestionEmbedding(300, num_hid, 1, bidirectional, 0.0)
-    v_att = ContextAttention(dataset.v_dim + dataset.s_dim, (q_emb.num_hid * (int(bidirectional) + 1)))
-    return BaseRefexModelAttn(w_emb, q_emb, v_att)
+
+    dim1, dim2 = dataset.v_dim + dataset.s_dim, (q_emb.num_hid * (int(bidirectional) + 1))
+    cv_att = ContextAttention(dim1, dim2)
+    v_att = NewAttention(dim1, dim2, num_hid)
+    return BaseRefexModelAttn(w_emb, q_emb, cv_att, v_att)
