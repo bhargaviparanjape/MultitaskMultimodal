@@ -15,6 +15,7 @@ import json
 import scipy
 import tempfile
 
+sys.path.append('/home/ubuntu/11777/src/baselines/refexp/Google_Refexp_toolbox/google_refexp_py_lib')
 from google_refexp_py_lib.refexp_eval import RefexpEvalComprehension
 
 def parse_args():
@@ -61,7 +62,6 @@ if __name__ == '__main__':
     model = getattr(base_model, constructor)(train_dset, args.num_hid)
     if torch.cuda.is_available():
         model = model.cuda()
-    #model = getattr(base_model, constructor)(train_dset, args.num_hid)
     model.w_emb.init_embedding(os.path.join(data_root, 'glove6b_init_300d.npy'))
 
     if torch.cuda.is_available():

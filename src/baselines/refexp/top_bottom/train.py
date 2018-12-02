@@ -122,6 +122,7 @@ def train(model, train_loader, eval_loader, num_epochs, output, eval_compreh, la
             model_path = os.path.join(output, 'model.pth')
             torch.save(model.state_dict(), model_path)
             best_eval_score = eval_score
+            logger.write('\best teval score: %.2f' % best_eval_score)
 
 
 def eval(model, dataloader):

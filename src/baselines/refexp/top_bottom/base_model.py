@@ -28,7 +28,7 @@ class BaseRefexModel(nn.Module):
         q_emb = self.q_emb(w_emb) # [batch, q_dim]
         
         vs = torch.cat((v,b), dim=2)
-        logits, _ = self.v_att(vs, q_emb)
+        logits = self.v_att(vs, q_emb)
         return logits
 
 class BaseRefexModelAttn(nn.Module):
