@@ -23,7 +23,10 @@ def bce_loss(logits, iou_scores):
     m = nn.Sigmoid()
     targets = (iou_scores > 0.5).view(-1)
     # targets = iou_scores
-    targets = targets.type(torch.FloatTensor)
+    if torch.cuda.is_available():
+        targets = targets.type(torch.cuda.FloatTensor)
+    else:
+        targets = targets.type(torch.FloatTensor)
     loss = nn.BCELoss()
     return loss(m(logits.view(-1)), targets)
 
@@ -79,7 +82,7 @@ def train(model, train_loader, eval_loader, num_epochs, output, eval_compreh, la
     utils.create_dir(output)
     optim = torch.optim.Adamax(model.parameters())
     logger = utils.Logger(os.path.join(output, 'log.txt'))
-    best_prec1, best_prec2, best_prec3 = 0, 0
+    best_prec1, best_prec2, best_prec3 = 0, 0, 0
 
     for epoch in range(num_epochs):
         total_loss = 0
