@@ -25,7 +25,29 @@ class BaseRefexModel(nn.Module):
         return: logits, not probs
         """
         w_emb = self.w_emb(q)
-        # q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        
+        vs = torch.cat((v,b), dim=2)
+        logits, _ = self.v_att(vs, q_emb)
+        return logits
+
+class BaseRefexModelAttn(nn.Module):
+    def __init__(self, w_emb, q_emb, v_att):
+        super(BaseRefexModel, self).__init__()
+        self.w_emb = w_emb
+        self.q_emb = q_emb
+        self.v_att = v_att
+
+    def forward(self, v, b, q, labels):
+        """Forward
+
+        v: [batch, num_objs, obj_dim]
+        b: [batch, num_objs, b_dim]
+        q: [batch_size, seq_length]
+
+        return: logits, not probs
+        """
+        w_emb = self.w_emb(q)
         q_emb = self.q_emb.forward_all(w_emb)
         
         vs = torch.cat((v,b), dim=2)
@@ -35,6 +57,11 @@ class BaseRefexModel(nn.Module):
 def build_refex_baseline(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    # v_att = NewAttention(dataset.v_dim + dataset.s_dim, q_emb.num_hid, num_hid)
-    v_att = ContextAttention(dataset.v_dim + dataset.s_dim, q_emb.num_hid)
+    v_att = NewAttention(dataset.v_dim + dataset.s_dim, q_emb.num_hid, num_hid)
     return BaseRefexModel(w_emb, q_emb, v_att)
+
+def build_refex_baseline_attn(dataset, num_hid):
+    w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
+    q_emb = QuestionEmbedding(300, num_hid, 1, True, 0.0)
+    v_att = ContextAttention(dataset.v_dim + dataset.s_dim, q_emb.num_hid)
+    return BaseRefexModelAttn(w_emb, q_emb, v_att)

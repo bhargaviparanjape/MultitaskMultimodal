@@ -5,7 +5,8 @@ import torch.nn as nn
 import utils
 from torch.autograd import Variable
 import pdb
-
+import json
+import tempfile
 
 def instance_bce_with_logits(logits, labels):
     assert logits.dim() == 2
@@ -23,8 +24,51 @@ def compute_score_with_logits(logits, labels):
     logits = torch.max(logits, 1)[1].data #argmax
     return (logits == labels).sum(), logits
 
+def save_predictions(eval_loader, model, filename=None):
+    if not filename:
+        _, filename = tempfile.mkstemp()
 
-def train(model, train_loader, eval_loader, num_epochs, output):
+    _, analysis_log = evaluate(model, eval_loader)
+    with open(filename, "w+") as fout:
+        for item in analysis_log:
+            dict_ = {
+                "image_id" : item[0],
+                "annotation_id" : item[1],
+                "refexp_id" : item[2],
+                "predicted_id" : item[3],
+                "logits": list(map(float, item[5])),
+            }
+            fout.write(json.dumps(dict_) + "\n")
+    return filename
+
+def refexp_evaluation_scores(eval_loader, model, eval_compreh, labeled_data):
+    predictions_file = save_predictions(eval_loader, model)
+
+    predictions = []
+    with open('%s' % predictions_file, 'r') as fp:
+        for line in fp:
+            pred = json.loads(line)
+            ann = labeled_data['annotations'][str(pred['annotation_id'])]
+            b = ann['boxes']
+            l = pred['logits']
+            predictions.append({
+                'annotation_id': pred['annotation_id'],
+                'refexp_id': pred['refexp_id'],
+                'predicted_bounding_boxes': zip(*sorted(zip(*[l, b]), reverse=True))[1]
+            })
+
+    fd, eval_path = tempfile.mkstemp()
+    with os.fdopen(fd, 'w') as tmp:
+        json.dump(predictions, tmp)
+
+    prec, _ = eval_compreh.evaluate(eval_path, thresh_k=1)
+    eval_compreh.evaluate(eval_path, thresh_k=2)
+    eval_compreh.evaluate(eval_path, thresh_k=3)
+    os.remove(predictions_file)
+    os.remove(eval_path)
+    return prec
+
+def train(model, train_loader, eval_loader, num_epochs, output, eval_compreh, labeled_data):
     utils.create_dir(output)
     optim = torch.optim.Adamax(model.parameters())
     logger = utils.Logger(os.path.join(output, 'log.txt'))
@@ -67,6 +111,7 @@ def train(model, train_loader, eval_loader, num_epochs, output):
         train_score = 100 * train_score / len(train_loader.dataset)
         model.train(False)
         eval_score = eval(model, eval_loader)
+        eval_score = refexp_evaluation_scores(eval_loader, model, eval_compreh, labeled_data)
         model.train(True)
 
         logger.write('epoch %d, time: %.2f' % (epoch, time.time()-t))

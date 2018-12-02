@@ -12,6 +12,13 @@ import pdb
 import sys,os
 import json
 
+import scipy
+import tempfile
+
+sys.path.append('/home/ubuntu/11777/src/baselines/refexp/Google_Refexp_toolbox/google_refexp_py_lib')
+from refexp_eval import RefexpEvalComprehension
+from refexp_eval import RefexpEvalGeneration
+from common_utils import draw_bbox
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -28,6 +35,17 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+def load_evaluation_refexp():
+    base_dir = '/home/ubuntu/11777/src/baselines/refexp/Google_Refexp_toolbox'
+    coco_data_path = '%s/external/coco/annotations/instances_train2014.json' % base_dir
+    refexp_dataset_path = '%s/google_refexp_dataset_release/google_refexp_val_201511_coco_aligned.json' % base_dir
+    eval_compreh = RefexpEvalComprehension(refexp_dataset_path, coco_data_path)
+    data_path = '/home/ubuntu/11777/data/refexp/'
+
+    with open('%s/google_refexp_val_201511_coco_aligned_and_labeled.json' % data_path, 'r') as fp:
+        labeled_data = json.load(fp)
+
+    return eval_compreh, labeled_data
 
 if __name__ == '__main__':
     args = parse_args()
@@ -48,13 +66,14 @@ if __name__ == '__main__':
         model = model.cuda()
     #model = getattr(base_model, constructor)(train_dset, args.num_hid)
     model.w_emb.init_embedding(os.path.join(data_root, 'glove6b_init_300d.npy'))
-    
+
     if torch.cuda.is_available():
         model = nn.DataParallel(model).cuda()
     train_loader = DataLoader(train_dset, batch_size, shuffle=True, num_workers=1)
     eval_loader =  DataLoader(eval_dset, batch_size, shuffle=False, num_workers=1)
     if args.mode == "train":
-        train(model, train_loader, eval_loader, args.epochs, args.output)
+        eval_compreh, labeled_data = load_evaluation_refexp()
+        train(model, train_loader, eval_loader, args.epochs, args.output, eval_compreh, labeled_data)
     else:
         checkpoint = torch.load(args.model_file)
         model.load_state_dict(checkpoint)
