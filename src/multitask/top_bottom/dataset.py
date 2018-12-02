@@ -106,6 +106,8 @@ def _load_dataset(task, dataroot, name, img_id2val, run_as):
         refex_path = os.path.join(
             dataroot, 'google_refexp_%s_201511_coco_aligned_and_labeled_filtered.json' % name)
 
+    print('data is being loaded from:', question_path, refex_path)
+
     '''DEBUG'''
     if run_as == 'debug':
        vqa_train_image_ids = [458752, 458752, 458752, 458752, 262146]
