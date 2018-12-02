@@ -16,9 +16,7 @@ import scipy
 import tempfile
 
 sys.path.append('/home/ubuntu/11777/src/baselines/refexp/Google_Refexp_toolbox/google_refexp_py_lib')
-from refexp_eval import RefexpEvalComprehension
-from refexp_eval import RefexpEvalGeneration
-from common_utils import draw_bbox
+from google_refexp_py_lib.refexp_eval import RefexpEvalComprehension
 
 def parse_args():
     parser = argparse.ArgumentParser()
