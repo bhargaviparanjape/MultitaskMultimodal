@@ -23,6 +23,7 @@ def parse_args():
     parser.add_argument('--epochs', type=int, default=30)
     parser.add_argument('data_root', type=str, default=None)
     parser.add_argument('--num_hid', type=int, default=1024)
+    parser.add_argument('--bidirectional', type=int, default=1)
     parser.add_argument('--model', type=str, default='refex_baseline')
     parser.add_argument('--output', type=str, default='saved_models/exp3')
     parser.add_argument('--mode', type=str, default="train")
@@ -59,7 +60,8 @@ if __name__ == '__main__':
     eval_dset = RefExpFeatureDataset('val_heldout' if args.mode == "eval_heldout" else 'val', dictionary, data_root)
     batch_size = args.batch_size
     constructor = 'build_%s' % args.model
-    model = getattr(base_model, constructor)(train_dset, args.num_hid)
+    bidirectional = args.bidirectional > 0
+    model = getattr(base_model, constructor)(train_dset, args.num_hid, bidirectional)
     if torch.cuda.is_available():
         model = model.cuda()
     model.w_emb.init_embedding(os.path.join(data_root, 'glove6b_init_300d.npy'))

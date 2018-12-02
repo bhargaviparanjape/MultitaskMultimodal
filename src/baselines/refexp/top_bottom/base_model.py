@@ -54,14 +54,15 @@ class BaseRefexModelAttn(nn.Module):
         logits, _ = self.v_att(vs, q_emb)
         return logits
 
-def build_refex_baseline(dataset, num_hid):
+def build_refex_baseline(dataset, num_hid, bidirectional):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
-    q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    v_att = NewAttention(dataset.v_dim + dataset.s_dim, q_emb.num_hid, num_hid)
+    q_emb = QuestionEmbedding(300, num_hid, 1, bidirectional, 0.0)
+    v_att = NewAttention(dataset.v_dim + dataset.s_dim, (q_emb.num_hid * (int(bidirectional) + 1)), num_hid)
     return BaseRefexModel(w_emb, q_emb, v_att)
 
-def build_refex_baseline_attn(dataset, num_hid):
+def build_refex_baseline_attn(dataset, num_hid, bidirectional):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
-    q_emb = QuestionEmbedding(300, num_hid, 1, True, 0.0)
-    v_att = ContextAttention(dataset.v_dim + dataset.s_dim, q_emb.num_hid)
+    bidirectional = True
+    q_emb = QuestionEmbedding(300, num_hid, 1, bidirectional, 0.0)
+    v_att = ContextAttention(dataset.v_dim + dataset.s_dim, (q_emb.num_hid * (int(bidirectional) + 1)))
     return BaseRefexModelAttn(w_emb, q_emb, v_att)
