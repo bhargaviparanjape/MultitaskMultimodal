@@ -29,7 +29,7 @@ class BaseRefexModel(nn.Module):
         q_emb = self.q_emb.forward_all(w_emb)
         
         vs = torch.cat((v,b), dim=2)
-        logits = self.v_att(vs, q_emb)
+        logits, _ = self.v_att(vs, q_emb)
         return logits
 
 def build_refex_baseline(dataset, num_hid):
