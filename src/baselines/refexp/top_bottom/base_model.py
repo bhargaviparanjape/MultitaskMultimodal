@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from attention import Attention, NewAttention
+from context_attention import ContextAttention
 from language_model import WordEmbedding, QuestionEmbedding
 from classifier import SimpleClassifier
 from fc import FCNet
@@ -24,7 +25,8 @@ class BaseRefexModel(nn.Module):
         return: logits, not probs
         """
         w_emb = self.w_emb(q)
-        q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        # q_emb = self.q_emb(w_emb) # [batch, q_dim]
+        q_emb = self.q_emb.forward_all(w_emb)
         
         vs = torch.cat((v,b), dim=2)
         logits = self.v_att(vs, q_emb)
@@ -33,5 +35,6 @@ class BaseRefexModel(nn.Module):
 def build_refex_baseline(dataset, num_hid):
     w_emb = WordEmbedding(dataset.dictionary.ntoken, 300, 0.0)
     q_emb = QuestionEmbedding(300, num_hid, 1, False, 0.0)
-    v_att = NewAttention(dataset.v_dim + dataset.s_dim, q_emb.num_hid, num_hid)
+    # v_att = NewAttention(dataset.v_dim + dataset.s_dim, q_emb.num_hid, num_hid)
+    v_att = ContextAttention(dataset.v_dim + dataset.s_dim, q_emb.num_hid)
     return BaseRefexModel(w_emb, q_emb, v_att)

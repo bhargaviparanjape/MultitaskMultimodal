@@ -81,8 +81,8 @@ def train(task, model, train_loaders, eval_loaders, num_epochs, output, learning
             model.train(True)
 
             if eval_vqa_score > best_eval_vqa_score:
-                logger.write('Saving model for VQA')
                 model_path = os.path.join(output, 'model_vqa.pth')
+                logger.write('Saving model for VQA %s' % model_path)
                 torch.save(model.state_dict(), model_path)
                 best_eval_vqa_score = eval_vqa_score
 
@@ -133,8 +133,8 @@ def train(task, model, train_loaders, eval_loaders, num_epochs, output, learning
             model.train(True)
 
             if eval_ref_score > best_eval_ref_score:
-                logger.write('Saving model for RefExp')
                 model_path = os.path.join(output, 'model_refexp_best.pth')
+                logger.write('Saving model for RefExp %s ' % model_path)
                 torch.save(model.state_dict(), model_path)
                 best_eval_ref_score = eval_ref_score
 
